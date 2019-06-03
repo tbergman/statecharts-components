@@ -1,6 +1,8 @@
 import * as React from "react";
 import { StateChart } from "@statecharts/xstate-viz";
-import { machine } from "../machine";
+import { carouselMachineFactory } from "../machine";
+
+const machine = carouselMachineFactory(6, 3);
 
 export function Viz() {
   return (

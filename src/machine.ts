@@ -1,5 +1,6 @@
-import { Machine, assign, EventObject } from "xstate";
+import { Machine, assign } from "xstate";
 
+type State = "first" | "middle" | "last";
 type Context = {
   cursor: number;
   min: number;
@@ -43,130 +44,147 @@ const actions = {
     })
 };
 
-export const machine = Machine<Context, StateSchema, Event>({
-  id: "carousel",
-  initial: "first",
-  context: { cursor: 1, min: 1, max: 5 },
-  states: {
-    first: {
-      on: {
-        NEXT: {
-          target: "middle",
-          actions: [actions.incCursor]
-        },
-        PREV: {
-          target: "last",
-          actions: [actions.setCursorTo(5)]
-        },
-        GO_TO: [
-          {
-            target: "first",
-            cond: (ctx, e) =>
-              guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-              guards.isFirstItem(e.data, ctx.min),
-            actions: [actions.setCursorTo(1), () => console.log("first")]
-          },
-          {
-            target: "last",
-            cond: (ctx, e) =>
-              guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-              guards.isLastItem(e.data, ctx.max),
-            actions: [actions.setCursorTo(5), () => console.log("last")]
-          },
-          {
+export function carouselMachineFactory(totalItems: number, startIndex: number) {
+  if (startIndex < 1 || startIndex > totalItems) {
+    throw Error(
+      "invalid startIndex on carouselMachine. startIndex should satisfy 1 <= startIndex <= totalItems"
+    );
+  }
+  let initial: State = "first";
+  let initialContext: Context = { cursor: startIndex, min: 1, max: totalItems };
+  if (startIndex === 1) {
+    initial = "first";
+  } else if (startIndex === totalItems) {
+    initial = "last";
+  } else {
+    initial = "middle";
+    initialContext = { ...initialContext, cursor: startIndex };
+  }
+  const machine = Machine<Context, StateSchema, Event>({
+    id: "carousel",
+    initial,
+    context: initialContext,
+    states: {
+      first: {
+        on: {
+          NEXT: {
             target: "middle",
-            cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
-            actions: [
-              assign({
-                cursor: (ctx, e) => e.data
-              }),
-              () => console.log("middle")
-            ]
-          }
-        ]
-      }
-    },
-    middle: {
-      on: {
-        PREV: [
-          {
-            target: "first",
-            cond: ctx => guards.isFirstItem(ctx.cursor - 1, ctx.min),
-            actions: [actions.decCursor]
-          },
-          { target: "middle", actions: [actions.decCursor] }
-        ],
-        NEXT: [
-          {
-            target: "last",
-            cond: ctx => guards.isLastItem(ctx.cursor + 1, ctx.max),
             actions: [actions.incCursor]
           },
-          { target: "middle", actions: [actions.incCursor] }
-        ],
-        GO_TO: [
-          {
+          PREV: {
+            target: "last",
+            actions: [actions.setCursorTo(totalItems)]
+          },
+          GO_TO: [
+            {
+              target: "first",
+              cond: (ctx, e) =>
+                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+                guards.isFirstItem(e.data, ctx.min),
+              actions: [actions.setCursorTo(1)]
+            },
+            {
+              target: "last",
+              cond: (ctx, e) =>
+                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+                guards.isLastItem(e.data, ctx.max),
+              actions: [actions.setCursorTo(totalItems)]
+            },
+            {
+              target: "middle",
+              cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
+              actions: [
+                assign({
+                  cursor: (ctx, e) => e.data
+                })
+              ]
+            }
+          ]
+        }
+      },
+      middle: {
+        on: {
+          PREV: [
+            {
+              target: "first",
+              cond: ctx => guards.isFirstItem(ctx.cursor - 1, ctx.min),
+              actions: [actions.decCursor]
+            },
+            { target: "middle", actions: [actions.decCursor] }
+          ],
+          NEXT: [
+            {
+              target: "last",
+              cond: ctx => guards.isLastItem(ctx.cursor + 1, ctx.max),
+              actions: [actions.incCursor]
+            },
+            { target: "middle", actions: [actions.incCursor] }
+          ],
+          GO_TO: [
+            {
+              target: "first",
+              cond: (ctx, e) =>
+                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+                guards.isFirstItem(e.data, ctx.min),
+              actions: [actions.setCursorTo(1)]
+            },
+            {
+              target: "last",
+              cond: (ctx, e) =>
+                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+                guards.isLastItem(e.data, ctx.max),
+              actions: [actions.setCursorTo(totalItems)]
+            },
+            {
+              target: "middle",
+              cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
+              actions: [
+                assign({
+                  cursor: (ctx, e) => e.data
+                })
+              ]
+            }
+          ]
+        }
+      },
+      last: {
+        on: {
+          PREV: {
+            target: "middle",
+            actions: [actions.decCursor]
+          },
+          NEXT: {
             target: "first",
-            cond: (ctx, e) =>
-              guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-              guards.isFirstItem(e.data, ctx.min),
             actions: [actions.setCursorTo(1)]
           },
-          {
-            target: "last",
-            cond: (ctx, e) =>
-              guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-              guards.isLastItem(e.data, ctx.max),
-            actions: [actions.setCursorTo(5)]
-          },
-          {
-            target: "middle",
-            cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
-            actions: [
-              assign({
-                cursor: (ctx, e) => e.data
-              })
-            ]
-          }
-        ]
-      }
-    },
-    last: {
-      on: {
-        PREV: {
-          target: "middle",
-          actions: [actions.decCursor]
-        },
-        NEXT: {
-          target: "first",
-          actions: [actions.setCursorTo(1)]
-        },
-        GO_TO: [
-          {
-            target: "first",
-            cond: (ctx, e) =>
-              guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-              guards.isFirstItem(e.data, ctx.min),
-            actions: [actions.setCursorTo(1)]
-          },
-          {
-            target: "last",
-            cond: (ctx, e) =>
-              guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-              guards.isLastItem(e.data, ctx.max),
-            actions: [actions.setCursorTo(5)]
-          },
-          {
-            target: "middle",
-            cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
-            actions: [
-              assign({
-                cursor: (ctx, e) => e.data
-              })
-            ]
-          }
-        ]
+          GO_TO: [
+            {
+              target: "first",
+              cond: (ctx, e) =>
+                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+                guards.isFirstItem(e.data, ctx.min),
+              actions: [actions.setCursorTo(1)]
+            },
+            {
+              target: "last",
+              cond: (ctx, e) =>
+                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+                guards.isLastItem(e.data, ctx.max),
+              actions: [actions.setCursorTo(totalItems)]
+            },
+            {
+              target: "middle",
+              cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
+              actions: [
+                assign({
+                  cursor: (ctx, e) => e.data
+                })
+              ]
+            }
+          ]
+        }
       }
     }
-  }
-});
+  });
+  return machine;
+}
