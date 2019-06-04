@@ -1,4 +1,4 @@
-import { Machine, assign } from "xstate";
+import { Machine, assign, EventObject, StateNodeConfig } from "xstate";
 
 type State = "first" | "middle" | "last";
 type Context = {
@@ -14,37 +14,71 @@ type StateSchema = {
   };
 };
 
-type GoToEvent = { type: "GO_TO"; data: number };
-type Event = { type: "NEXT" } | { type: "PREV" } | GoToEvent;
+type Event = EventObject;
 
 const guards = {
-  isFirstItem: (nextCursor: number, min: number) => nextCursor === min,
-  isLastItem: (nextCursor: number, max: number) => nextCursor === max,
-  isCursorValid: (newCursor: number, min: number, max: number) => {
-    return newCursor <= max && newCursor >= min;
+  isFirstItem: (nextCursor: number | undefined, min: number) =>
+    nextCursor !== undefined && nextCursor === min,
+  isLastItem: (nextCursor: number | undefined, max: number) =>
+    nextCursor !== undefined && nextCursor === max,
+  isCursorValid: (nextCursor: number | undefined, min: number, max: number) => {
+    return nextCursor !== undefined && nextCursor <= max && nextCursor >= min;
   }
 };
 
-const actions = {
-  incCursor: assign({
-    cursor: (ctx: Context) => ctx.cursor + 1,
-    max: (ctx: Context) => ctx.max,
-    min: (ctx: Context) => ctx.min
-  }),
-  decCursor: assign({
-    cursor: (ctx: Context) => ctx.cursor - 1,
-    max: (ctx: Context) => ctx.max,
-    min: (ctx: Context) => ctx.min
-  }),
-  setCursorTo: (cursor: number) =>
-    assign({
-      cursor: cursor,
-      max: (ctx: Context) => ctx.max,
-      min: (ctx: Context) => ctx.min
-    })
-};
+function goToTransitionConfig() {
+  return [
+    {
+      target: "first",
+      cond: (ctx: Context, e: Event) =>
+        guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+        guards.isFirstItem(e.data, ctx.min),
+      actions: [
+        assign({
+          cursor: (ctx: Context) => ctx.min,
+          max: (ctx: Context) => ctx.max,
+          min: (ctx: Context) => ctx.min
+        })
+      ]
+    },
+    {
+      target: "last",
+      cond: (ctx: Context, e: Event) =>
+        guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+        guards.isLastItem(e.data, ctx.max),
+      actions: [
+        assign({
+          cursor: (ctx: Context) => ctx.max,
+          max: (ctx: Context) => ctx.max,
+          min: (ctx: Context) => ctx.min
+        })
+      ]
+    },
+    {
+      target: "middle",
+      cond: (ctx: Context, e: Event) =>
+        guards.isCursorValid(e.data, ctx.min, ctx.max),
+      actions: [
+        assign({
+          cursor: (_: Context, e: Event) => e.data as number,
+          max: (ctx: Context) => ctx.max,
+          min: (ctx: Context) => ctx.min
+        })
+      ]
+    }
+  ];
+}
 
-export function carouselMachineFactory(totalItems: number, startIndex: number) {
+interface CarouselMachineFactoryConfig {
+  totalItems: number;
+  startIndex: number;
+  autoPlay?: number;
+}
+export function carouselMachineFactory({
+  totalItems,
+  startIndex,
+  autoPlay
+}: CarouselMachineFactoryConfig) {
   if (startIndex < 1 || startIndex > totalItems) {
     throw Error(
       "invalid startIndex on carouselMachine. startIndex should satisfy 1 <= startIndex <= totalItems"
@@ -52,6 +86,8 @@ export function carouselMachineFactory(totalItems: number, startIndex: number) {
   }
   let initial: State = "first";
   let initialContext: Context = { cursor: startIndex, min: 1, max: totalItems };
+
+  // STATE AND STARTINDEX
   if (startIndex === 1) {
     initial = "first";
   } else if (startIndex === totalItems) {
@@ -60,130 +96,189 @@ export function carouselMachineFactory(totalItems: number, startIndex: number) {
     initial = "middle";
     initialContext = { ...initialContext, cursor: startIndex };
   }
+
+  /**
+   * States
+   */
+  let first: StateNodeConfig<Context, {}, Event> = {
+    on: {
+      NEXT: {
+        target: "middle",
+        actions: [
+          assign({
+            cursor: ctx => ctx.cursor + 1,
+            max: ctx => ctx.max,
+            min: ctx => ctx.min
+          })
+        ]
+      },
+      PREV: {
+        target: "last",
+        actions: [
+          assign({
+            cursor: ctx => ctx.max,
+            max: ctx => ctx.max,
+            min: ctx => ctx.min
+          })
+        ]
+      },
+      GO_TO: goToTransitionConfig()
+    }
+  };
+  if (autoPlay !== undefined) {
+    first = {
+      ...first,
+      after: {
+        [autoPlay]: {
+          target: "middle",
+          actions: [
+            assign({
+              cursor: ctx => ctx.cursor + 1,
+              max: ctx => ctx.max,
+              min: ctx => ctx.min
+            })
+          ]
+        }
+      }
+    };
+  }
+
+  let middle: StateNodeConfig<Context, {}, Event> = {
+    on: {
+      PREV: [
+        {
+          target: "first",
+          cond: ctx => guards.isFirstItem(ctx.cursor - 1, ctx.min),
+          actions: [
+            assign({
+              cursor: ctx => ctx.cursor - 1,
+              max: ctx => ctx.max,
+              min: ctx => ctx.min
+            })
+          ]
+        },
+        {
+          target: "middle",
+          actions: [
+            assign({
+              cursor: ctx => ctx.cursor - 1,
+              max: ctx => ctx.max,
+              min: ctx => ctx.min
+            })
+          ]
+        }
+      ],
+      NEXT: [
+        {
+          target: "last",
+          cond: ctx => guards.isLastItem(ctx.cursor + 1, ctx.max),
+          actions: [
+            assign({
+              cursor: ctx => ctx.cursor + 1,
+              max: ctx => ctx.max,
+              min: ctx => ctx.min
+            })
+          ]
+        },
+        {
+          target: "middle",
+          actions: [
+            assign({
+              cursor: ctx => ctx.cursor + 1,
+              max: ctx => ctx.max,
+              min: ctx => ctx.min
+            })
+          ]
+        }
+      ],
+      GO_TO: goToTransitionConfig()
+    }
+  };
+  if (autoPlay !== undefined) {
+    middle = {
+      ...middle,
+      after: {
+        [autoPlay]: [
+          {
+            target: "last",
+            cond: ctx => guards.isLastItem(ctx.cursor + 1, ctx.max),
+            actions: [
+              assign({
+                cursor: ctx => ctx.max,
+                max: ctx => ctx.max,
+                min: ctx => ctx.min
+              })
+            ]
+          },
+          {
+            target: "middle",
+            actions: [
+              assign({
+                cursor: ctx => ctx.cursor + 1,
+                max: ctx => ctx.max,
+                min: ctx => ctx.min
+              })
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  let last: StateNodeConfig<Context, {}, Event> = {
+    on: {
+      PREV: {
+        target: "middle",
+        actions: [
+          assign({
+            cursor: ctx => ctx.cursor - 1,
+            max: ctx => ctx.max,
+            min: ctx => ctx.min
+          })
+        ]
+      },
+      NEXT: {
+        target: "first",
+        actions: [
+          assign({
+            cursor: ctx => ctx.cursor + 1,
+            max: ctx => ctx.max,
+            min: ctx => ctx.min
+          })
+        ]
+      },
+      GO_TO: goToTransitionConfig()
+    }
+  };
+  if (autoPlay !== undefined) {
+    last = {
+      ...last,
+      after: {
+        [autoPlay]: {
+          target: "first",
+          actions: [
+            assign({
+              cursor: ctx => ctx.min,
+              max: ctx => ctx.max,
+              min: ctx => ctx.min
+            })
+          ]
+        }
+      }
+    };
+  }
+
+  /**
+   * Machine config
+   */
   const machine = Machine<Context, StateSchema, Event>({
     id: "carousel",
     initial,
     context: initialContext,
     states: {
-      first: {
-        on: {
-          NEXT: {
-            target: "middle",
-            actions: [actions.incCursor]
-          },
-          PREV: {
-            target: "last",
-            actions: [actions.setCursorTo(totalItems)]
-          },
-          GO_TO: [
-            {
-              target: "first",
-              cond: (ctx, e) =>
-                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-                guards.isFirstItem(e.data, ctx.min),
-              actions: [actions.setCursorTo(1)]
-            },
-            {
-              target: "last",
-              cond: (ctx, e) =>
-                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-                guards.isLastItem(e.data, ctx.max),
-              actions: [actions.setCursorTo(totalItems)]
-            },
-            {
-              target: "middle",
-              cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
-              actions: [
-                assign({
-                  cursor: (ctx, e) => e.data
-                })
-              ]
-            }
-          ]
-        }
-      },
-      middle: {
-        on: {
-          PREV: [
-            {
-              target: "first",
-              cond: ctx => guards.isFirstItem(ctx.cursor - 1, ctx.min),
-              actions: [actions.decCursor]
-            },
-            { target: "middle", actions: [actions.decCursor] }
-          ],
-          NEXT: [
-            {
-              target: "last",
-              cond: ctx => guards.isLastItem(ctx.cursor + 1, ctx.max),
-              actions: [actions.incCursor]
-            },
-            { target: "middle", actions: [actions.incCursor] }
-          ],
-          GO_TO: [
-            {
-              target: "first",
-              cond: (ctx, e) =>
-                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-                guards.isFirstItem(e.data, ctx.min),
-              actions: [actions.setCursorTo(1)]
-            },
-            {
-              target: "last",
-              cond: (ctx, e) =>
-                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-                guards.isLastItem(e.data, ctx.max),
-              actions: [actions.setCursorTo(totalItems)]
-            },
-            {
-              target: "middle",
-              cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
-              actions: [
-                assign({
-                  cursor: (ctx, e) => e.data
-                })
-              ]
-            }
-          ]
-        }
-      },
-      last: {
-        on: {
-          PREV: {
-            target: "middle",
-            actions: [actions.decCursor]
-          },
-          NEXT: {
-            target: "first",
-            actions: [actions.setCursorTo(1)]
-          },
-          GO_TO: [
-            {
-              target: "first",
-              cond: (ctx, e) =>
-                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-                guards.isFirstItem(e.data, ctx.min),
-              actions: [actions.setCursorTo(1)]
-            },
-            {
-              target: "last",
-              cond: (ctx, e) =>
-                guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-                guards.isLastItem(e.data, ctx.max),
-              actions: [actions.setCursorTo(totalItems)]
-            },
-            {
-              target: "middle",
-              cond: (ctx, e) => guards.isCursorValid(e.data, ctx.min, ctx.max),
-              actions: [
-                assign({
-                  cursor: (ctx, e) => e.data
-                })
-              ]
-            }
-          ]
-        }
-      }
+      first,
+      middle,
+      last
     }
   });
   return machine;

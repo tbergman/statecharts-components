@@ -3,6 +3,9 @@
 - [x] Next, Prev with static items
 - [x] Cyclic transition
 - [x] Custom go to and click on dots
+- [x] Autoplay
+- [ ] Support for direction
+- [ ] Support for different layouts
 - [ ] Support for animations
 
 ## Run locally
