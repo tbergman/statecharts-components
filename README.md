@@ -4,9 +4,10 @@
 - [x] Cyclic transition
 - [x] Custom go to and click on dots
 - [x] Autoplay
-- [ ] Support for direction
+- [x] Support for direction
 - [ ] Support for different layouts
 - [ ] Support for animations
+- [ ] Don't accept `Next` and `Prev` events for **machines of items length 1 and 2**
 
 ## Run locally
 

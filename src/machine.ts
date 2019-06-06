@@ -31,6 +31,11 @@ const goTo = [
   }
 ];
 
+function hasAutoPlay(config: CarouselMachineFactoryConfig) {
+  // TODO: add `config.totalItems > 1`
+  return config.autoPlay !== undefined;
+}
+
 export interface CarouselMachineFactoryConfig {
   totalItems: number;
   startIndex: number;
@@ -38,13 +43,14 @@ export interface CarouselMachineFactoryConfig {
   dir?: Dir;
   infinite?: boolean;
 }
-export function carouselMachineFactory({
-  totalItems,
-  startIndex,
-  autoPlay,
-  dir = "ltr",
-  infinite = false
-}: CarouselMachineFactoryConfig) {
+export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
+  const {
+    totalItems,
+    startIndex,
+    autoPlay,
+    dir = "ltr",
+    infinite = false
+  } = config;
   if (startIndex < 1 || startIndex > totalItems) {
     throw Error(
       "invalid startIndex on carouselMachine. startIndex should satisfy 1 <= startIndex <= totalItems"
@@ -75,6 +81,10 @@ export function carouselMachineFactory({
 
   const firstNext = [
     {
+      target: "first",
+      cond: (ctx: CarouselContext) => ctx.min === ctx.max
+    },
+    {
       target: "middle",
       cond: (ctx: CarouselContext) => ctx.dir === "ltr",
       actions: [changeCursor(ctx => ctx.cursor + 1)]
@@ -87,9 +97,9 @@ export function carouselMachineFactory({
     }
   ];
   const first = {
-    ...(autoPlay !== undefined && {
+    ...(hasAutoPlay(config) && {
       after: {
-        [autoPlay]: firstNext
+        [autoPlay as number]: firstNext
       }
     }),
     on: {
@@ -125,9 +135,9 @@ export function carouselMachineFactory({
     }
   ];
   const last = {
-    ...(autoPlay !== undefined && {
+    ...(hasAutoPlay(config) && {
       after: {
-        [autoPlay]: lastNext
+        [autoPlay as number]: lastNext
       }
     }),
     on: {
@@ -221,9 +231,9 @@ export function carouselMachineFactory({
   ];
   // for middle, both NEXT and PREV can result in same situations depending on item position and dir
   const middle = {
-    ...(autoPlay !== undefined && {
+    ...(hasAutoPlay(config) && {
       after: {
-        [autoPlay]: middleNext
+        [autoPlay as number]: middleNext
       }
     }),
     on: {

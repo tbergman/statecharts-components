@@ -3,8 +3,10 @@ import { StateChart } from "@statecharts/xstate-viz";
 import { carouselMachineFactory } from "../machine";
 
 const machine = carouselMachineFactory({
-  totalItems: 3,
-  startIndex: 2,
+  totalItems: 1,
+  startIndex: 1,
+  dir: "ltr",
+  autoPlay: 500,
   infinite: false
 });
 

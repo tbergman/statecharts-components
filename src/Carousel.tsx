@@ -64,9 +64,9 @@ export function Carousel({
   );
   // console.log(state);
   useEffect(() => {
-    service.onTransition(state => {
-      console.log(state.value, state.context);
-    });
+    // service.onTransition(state => {
+    //   console.log(state.value, state.context);
+    // });
   }, [service]);
   return (
     <>
