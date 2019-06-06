@@ -1,91 +1,63 @@
-import { Machine, assign, EventObject, StateNodeConfig } from "xstate";
+import { Machine, EventObject } from "xstate";
+import {
+  CarouselContext,
+  Dir,
+  CarouselEvent,
+  CarouselStateSchema
+} from "./types";
+import { guards } from "./machine/guards";
+import { changeCursor } from "./machine/updater";
 
-type State = "first" | "middle" | "last";
-type Context = {
-  cursor: number;
-  min: number;
-  max: number;
-};
-type StateSchema = {
-  states: {
-    first: {};
-    middle: {};
-    last: {};
-  };
-};
-
-type Event = EventObject;
-
-const guards = {
-  isFirstItem: (nextCursor: number | undefined, min: number) =>
-    nextCursor !== undefined && nextCursor === min,
-  isLastItem: (nextCursor: number | undefined, max: number) =>
-    nextCursor !== undefined && nextCursor === max,
-  isCursorValid: (nextCursor: number | undefined, min: number, max: number) => {
-    return nextCursor !== undefined && nextCursor <= max && nextCursor >= min;
+const goTo = [
+  {
+    target: "first",
+    cond: (ctx: CarouselContext, e: CarouselEvent) =>
+      guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+      guards.isFirstItem(e.data, ctx.min),
+    actions: [changeCursor(ctx => ctx.min)]
+  },
+  {
+    target: "last",
+    cond: (ctx: CarouselContext, e: CarouselEvent) =>
+      guards.isCursorValid(e.data, ctx.min, ctx.max) &&
+      guards.isLastItem(e.data, ctx.max),
+    actions: [changeCursor(ctx => ctx.max)]
+  },
+  {
+    target: "middle",
+    cond: (ctx: CarouselContext, e: CarouselEvent) =>
+      guards.isCursorValid(e.data, ctx.min, ctx.max),
+    actions: [changeCursor((_, e) => e.data)]
   }
-};
+];
 
-function goToTransitionConfig() {
-  return [
-    {
-      target: "first",
-      cond: (ctx: Context, e: Event) =>
-        guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-        guards.isFirstItem(e.data, ctx.min),
-      actions: [
-        assign({
-          cursor: (ctx: Context) => ctx.min,
-          max: (ctx: Context) => ctx.max,
-          min: (ctx: Context) => ctx.min
-        })
-      ]
-    },
-    {
-      target: "last",
-      cond: (ctx: Context, e: Event) =>
-        guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-        guards.isLastItem(e.data, ctx.max),
-      actions: [
-        assign({
-          cursor: (ctx: Context) => ctx.max,
-          max: (ctx: Context) => ctx.max,
-          min: (ctx: Context) => ctx.min
-        })
-      ]
-    },
-    {
-      target: "middle",
-      cond: (ctx: Context, e: Event) =>
-        guards.isCursorValid(e.data, ctx.min, ctx.max),
-      actions: [
-        assign({
-          cursor: (_: Context, e: Event) => e.data as number,
-          max: (ctx: Context) => ctx.max,
-          min: (ctx: Context) => ctx.min
-        })
-      ]
-    }
-  ];
-}
-
-interface CarouselMachineFactoryConfig {
+export interface CarouselMachineFactoryConfig {
   totalItems: number;
   startIndex: number;
   autoPlay?: number;
+  dir?: Dir;
+  infinite?: boolean;
 }
 export function carouselMachineFactory({
   totalItems,
   startIndex,
-  autoPlay
+  autoPlay,
+  dir = "ltr",
+  infinite = false
 }: CarouselMachineFactoryConfig) {
   if (startIndex < 1 || startIndex > totalItems) {
     throw Error(
       "invalid startIndex on carouselMachine. startIndex should satisfy 1 <= startIndex <= totalItems"
     );
   }
-  let initial: State = "first";
-  let initialContext: Context = { cursor: startIndex, min: 1, max: totalItems };
+  let initial: any = "first";
+  let initialContext: CarouselContext = {
+    cursor: startIndex,
+    min: 1,
+    max: totalItems,
+    dir,
+    infinite
+  };
 
   // STATE AND STARTINDEX
   if (startIndex === 1) {
@@ -100,178 +72,171 @@ export function carouselMachineFactory({
   /**
    * States
    */
-  let first: StateNodeConfig<Context, {}, Event> = {
-    on: {
-      NEXT: {
-        target: "middle",
-        actions: [
-          assign({
-            cursor: ctx => ctx.cursor + 1,
-            max: ctx => ctx.max,
-            min: ctx => ctx.min
-          })
-        ]
-      },
-      PREV: {
-        target: "last",
-        actions: [
-          assign({
-            cursor: ctx => ctx.max,
-            max: ctx => ctx.max,
-            min: ctx => ctx.min
-          })
-        ]
-      },
-      GO_TO: goToTransitionConfig()
-    }
-  };
-  if (autoPlay !== undefined) {
-    first = {
-      ...first,
-      after: {
-        [autoPlay]: {
-          target: "middle",
-          actions: [
-            assign({
-              cursor: ctx => ctx.cursor + 1,
-              max: ctx => ctx.max,
-              min: ctx => ctx.min
-            })
-          ]
-        }
-      }
-    };
-  }
 
-  let middle: StateNodeConfig<Context, {}, Event> = {
+  const firstNext = [
+    {
+      target: "middle",
+      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
+      actions: [changeCursor(ctx => ctx.cursor + 1)]
+    },
+    {
+      target: "last",
+      cond: (ctx: CarouselContext) =>
+        ctx.dir === "rtl" && ctx.infinite === true,
+      actions: [changeCursor(ctx => ctx.max)]
+    }
+  ];
+  const first = {
+    ...(autoPlay !== undefined && {
+      after: {
+        [autoPlay]: firstNext
+      }
+    }),
     on: {
+      NEXT: firstNext,
       PREV: [
         {
-          target: "first",
-          cond: ctx => guards.isFirstItem(ctx.cursor - 1, ctx.min),
-          actions: [
-            assign({
-              cursor: ctx => ctx.cursor - 1,
-              max: ctx => ctx.max,
-              min: ctx => ctx.min
-            })
-          ]
-        },
-        {
-          target: "middle",
-          actions: [
-            assign({
-              cursor: ctx => ctx.cursor - 1,
-              max: ctx => ctx.max,
-              min: ctx => ctx.min
-            })
-          ]
-        }
-      ],
-      NEXT: [
-        {
           target: "last",
-          cond: ctx => guards.isLastItem(ctx.cursor + 1, ctx.max),
-          actions: [
-            assign({
-              cursor: ctx => ctx.cursor + 1,
-              max: ctx => ctx.max,
-              min: ctx => ctx.min
-            })
-          ]
+          cond: (ctx: CarouselContext) =>
+            ctx.dir === "ltr" && ctx.infinite === true,
+          actions: [changeCursor(ctx => ctx.max)]
         },
         {
           target: "middle",
-          actions: [
-            assign({
-              cursor: ctx => ctx.cursor + 1,
-              max: ctx => ctx.max,
-              min: ctx => ctx.min
-            })
-          ]
+          cond: (ctx: CarouselContext) => ctx.dir === "rtl",
+          actions: [changeCursor(ctx => ctx.cursor + 1)]
         }
       ],
-      GO_TO: goToTransitionConfig()
+      GO_TO: goTo
     }
   };
-  if (autoPlay !== undefined) {
-    middle = {
-      ...middle,
-      after: {
-        [autoPlay]: [
-          {
-            target: "last",
-            cond: ctx => guards.isLastItem(ctx.cursor + 1, ctx.max),
-            actions: [
-              assign({
-                cursor: ctx => ctx.max,
-                max: ctx => ctx.max,
-                min: ctx => ctx.min
-              })
-            ]
-          },
-          {
-            target: "middle",
-            actions: [
-              assign({
-                cursor: ctx => ctx.cursor + 1,
-                max: ctx => ctx.max,
-                min: ctx => ctx.min
-              })
-            ]
-          }
-        ]
-      }
-    };
-  }
 
-  let last: StateNodeConfig<Context, {}, Event> = {
+  const lastNext = [
+    {
+      target: "first",
+      cond: (ctx: CarouselContext) =>
+        ctx.dir === "ltr" && ctx.infinite === true,
+      actions: [changeCursor(ctx => ctx.min)]
+    },
+    {
+      target: "middle",
+      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
+      actions: [changeCursor(ctx => ctx.cursor - 1)]
+    }
+  ];
+  const last = {
+    ...(autoPlay !== undefined && {
+      after: {
+        [autoPlay]: lastNext
+      }
+    }),
     on: {
-      PREV: {
-        target: "middle",
-        actions: [
-          assign({
-            cursor: ctx => ctx.cursor - 1,
-            max: ctx => ctx.max,
-            min: ctx => ctx.min
-          })
-        ]
-      },
-      NEXT: {
-        target: "first",
-        actions: [
-          assign({
-            cursor: ctx => ctx.cursor + 1,
-            max: ctx => ctx.max,
-            min: ctx => ctx.min
-          })
-        ]
-      },
-      GO_TO: goToTransitionConfig()
+      NEXT: lastNext,
+      PREV: [
+        {
+          target: "middle",
+          cond: (ctx: CarouselContext) => ctx.dir === "ltr",
+          actions: [changeCursor(ctx => ctx.cursor - 1)]
+        },
+        {
+          target: "first",
+          cond: (ctx: CarouselContext) =>
+            ctx.dir === "rtl" && ctx.infinite === true,
+          actions: [changeCursor(ctx => ctx.min)]
+        }
+      ],
+      GO_TO: goTo
     }
   };
-  if (autoPlay !== undefined) {
-    last = {
-      ...last,
+
+  const middleNext = [
+    // last item in middle
+    {
+      target: "last",
+      id: "middle-next-last",
+      cond: (ctx: CarouselContext) =>
+        ctx.dir === "ltr" && ctx.cursor + 1 === ctx.max,
+      actions: [changeCursor(ctx => ctx.max)]
+    },
+    // first item in middle going back becasue of rtl dir
+    {
+      target: "first",
+      id: "middle-next-first",
+      cond: (ctx: CarouselContext) =>
+        ctx.dir === "rtl" && ctx.cursor - 1 === ctx.min,
+      actions: [changeCursor(ctx => ctx.min)]
+    },
+    // middle to middle in ltr
+    {
+      target: "middle",
+      id: "middle-next-middle-ltr",
+      key: "middle-next-middle-ltr",
+      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
+      actions: [changeCursor(ctx => ctx.cursor + 1)]
+    },
+    // middle to middle in rtl
+    {
+      target: "middle",
+      id: "middle-next-middle-rtl",
+      key: "middle-next-middle-rtl",
+      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
+      actions: [changeCursor(ctx => ctx.cursor - 1)]
+    }
+  ];
+  const middlePrev = [
+    // last item in middle
+    {
+      target: "first",
+      id: "middle-prev-first",
+      key: "middle-prev-first",
+      cond: (ctx: CarouselContext) =>
+        ctx.dir === "ltr" && ctx.cursor - 1 === ctx.min,
+      actions: [changeCursor(ctx => ctx.min)]
+    },
+    // first item in middle going back becasue of rtl dir
+    {
+      target: "last",
+      id: "middle-prev-last",
+      key: "middle-prev-last",
+      cond: (ctx: CarouselContext) =>
+        ctx.dir === "rtl" && ctx.cursor + 1 === ctx.max,
+      actions: [changeCursor(ctx => ctx.max)]
+    },
+    // middle to middle in ltr
+    {
+      target: "middle",
+      id: "middle-prev-middle-ltr",
+      key: "middle-prev-middle-ltr",
+      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
+      actions: [changeCursor(ctx => ctx.cursor - 1)]
+    },
+    // middle to middle in rtl
+    {
+      target: "middle",
+      id: "middle-prev-middle-rtl",
+      key: "middle-prev-middle-rtl",
+      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
+      actions: [changeCursor(ctx => ctx.cursor + 1)]
+    }
+  ];
+  // for middle, both NEXT and PREV can result in same situations depending on item position and dir
+  const middle = {
+    ...(autoPlay !== undefined && {
       after: {
-        [autoPlay]: {
-          target: "first",
-          actions: [
-            assign({
-              cursor: ctx => ctx.min,
-              max: ctx => ctx.max,
-              min: ctx => ctx.min
-            })
-          ]
-        }
+        [autoPlay]: middleNext
       }
-    };
-  }
+    }),
+    on: {
+      NEXT: middleNext,
+      PREV: middlePrev,
+      GO_TO: goTo
+    }
+  };
 
   /**
    * Machine config
    */
-  const machine = Machine<Context, StateSchema, Event>({
+  const machine = Machine<CarouselContext, CarouselStateSchema, EventObject>({
     id: "carousel",
     initial,
     context: initialContext,

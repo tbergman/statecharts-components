@@ -2,6 +2,8 @@ import * as React from "react";
 import { useMachine } from "@xstate/react";
 import { carouselMachineFactory } from "./machine";
 import { State } from "xstate";
+import { useEffect } from "react";
+import { Dir } from "./types";
 
 const listStyle: React.CSSProperties = {
   display: "flex",
@@ -41,19 +43,31 @@ const dotStyle: React.CSSProperties = {
 export function Carousel({
   items,
   startIndex = 1,
-  autoPlay
+  autoPlay,
+  dir = "ltr",
+  infinite = false
 }: {
   items: { value: string; id: number }[];
   startIndex?: number;
   autoPlay?: number;
+  dir?: Dir;
+  infinite?: boolean;
 }) {
   const [state, sendEvent, service] = useMachine(
     carouselMachineFactory({
       totalItems: items.length,
       startIndex,
-      autoPlay
+      autoPlay,
+      dir,
+      infinite
     })
   );
+  // console.log(state);
+  useEffect(() => {
+    service.onTransition(state => {
+      console.log(state.value, state.context);
+    });
+  }, [service]);
   return (
     <>
       <div style={listStyle}>

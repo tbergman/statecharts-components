@@ -2,7 +2,11 @@ import * as React from "react";
 import { StateChart } from "@statecharts/xstate-viz";
 import { carouselMachineFactory } from "../machine";
 
-const machine = carouselMachineFactory({ totalItems: 6, startIndex: 1 });
+const machine = carouselMachineFactory({
+  totalItems: 3,
+  startIndex: 2,
+  infinite: false
+});
 
 export function Viz() {
   return (
