@@ -6,8 +6,11 @@
 - [x] Autoplay
 - [x] Support for direction
 - [ ] Support for different layouts
-- [ ] Support for animations
+- [ ] Support for touch
+- [ ] Config for dots and buttons
+- [ ] Support for carousel methods (goToSlide, next, prev, ...)
 - [ ] Don't accept `Next` and `Prev` events for **machines of items length 1 and 2**
+- [ ] Support for fade
 
 ## Run locally
 
