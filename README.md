@@ -11,6 +11,7 @@
 - [ ] Support for carousel methods (goToSlide, next, prev, ...)
 - [ ] Don't accept `Next` and `Prev` events for **machines of items length 1 and 2**
 - [ ] Support for fade
+- [ ] React component should be exactly the same as react-slick `<Slider />`
 
 ## Run locally
 
