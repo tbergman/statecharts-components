@@ -33,7 +33,8 @@ const goTo = [
 
 function hasAutoPlay(config: CarouselMachineFactoryConfig) {
   // TODO: add `config.totalItems > 1`
-  return config.autoPlay !== undefined;
+  // TODO: autoPlay should not be 0
+  return config.autoPlay !== undefined && config.autoPlay > 0;
 }
 
 export interface CarouselMachineFactoryConfig {
