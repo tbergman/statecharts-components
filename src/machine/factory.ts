@@ -1,13 +1,46 @@
-import { Machine, EventObject } from "xstate";
+import { Machine, EventObject, StateMachine } from "xstate";
 import {
   CarouselContext,
   Dir,
   CarouselEvent,
   CarouselStateSchema,
   Group
-} from "./types";
-import { changeCursor } from "./machine/updater";
-import { constructGroups, indexInGroup } from "./utils";
+} from "../types";
+import { changeCursor } from "./updater";
+import { constructGroups, indexInGroup } from "../utils";
+
+// Machine will have transitions if the items are more than 1
+function hasTransition(config: CarouselMachineFactoryConfig) {
+  return config.totalItems > 1;
+}
+
+function isAutoPlayValidNumber(
+  autoPlay: CarouselMachineFactoryConfig["autoPlay"]
+) {
+  return (
+    autoPlay !== undefined &&
+    !isNaN(autoPlay) &&
+    isFinite(autoPlay) &&
+    autoPlay > 0
+  );
+}
+
+// indicate whether we should include autoPlay in machine definition or not
+function hasAutoPlay(config: CarouselMachineFactoryConfig) {
+  return (
+    config.autoPlay !== undefined &&
+    isAutoPlayValidNumber(config.autoPlay) &&
+    hasTransition(config)
+  );
+}
+
+function isCursorValid(
+  nextCursor: number | undefined,
+  min: number,
+  max: number
+) {
+  return nextCursor !== undefined && nextCursor <= max && nextCursor >= min;
+}
 
 // e.data is the cursor of the group to which we need to transition
 const goTo = [
@@ -46,20 +79,6 @@ const goTo = [
   }
 ];
 
-function hasAutoPlay(config: CarouselMachineFactoryConfig) {
-  // TODO: add `config.totalItems > 1`
-  // TODO: autoPlay should not be 0
-  return config.autoPlay !== undefined && config.autoPlay > 0;
-}
-
-function isCursorValid(
-  nextCursor: number | undefined,
-  min: number,
-  max: number
-) {
-  return nextCursor !== undefined && nextCursor <= max && nextCursor >= min;
-}
-
 export interface CarouselMachineFactoryConfig {
   totalItems: number;
   startIndex: number;
@@ -77,9 +96,21 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
     infinite = false,
     slidesToShow = 1
   } = config;
+
+  // Validate startIndex to be a number in the range of min and amx
   if (startIndex < 1 || startIndex > totalItems) {
     throw Error(
-      "invalid startIndex on carouselMachine. startIndex should satisfy 1 <= startIndex <= totalItems"
+      "invalid property `startIndex` on carouselMachine. `startIndex` should satisfy 1 <= startIndex <= totalItems"
+    );
+  }
+  // Validate autoPlay to be a valid number (autoPlay can be number | undefined. we just validate the number part here)
+  if (autoPlay !== undefined && !isAutoPlayValidNumber(autoPlay)) {
+    throw Error("property `autoPlay` should be a valid, non-zero number");
+  }
+  // Validate slidesToShow to be a number in the range of min and max
+  if (slidesToShow < 1 || slidesToShow > totalItems) {
+    throw Error(
+      "invalid property `slidesToShow` on carouselMachine. `slidesToShow` should satisfy 1 <= slidesToShow <= totalItems"
     );
   }
 
@@ -372,7 +403,8 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
   /**
    * Machine config
    */
-  const machine = Machine<CarouselContext, CarouselStateSchema, EventObject>({
+
+  const machine = Machine<CarouselContext, CarouselStateSchema, CarouselEvent>({
     id: "carousel",
     initial,
     context: initialContext,
