@@ -1,9 +1,43 @@
 import * as React from "react";
 import { useMachine } from "@xstate/react";
+import chunk from "lodash.chunk";
 import { carouselMachineFactory } from "./machine";
-import { useEffect } from "react";
 import { Dir } from "./types";
 import "./Carousel.css";
+import { Interpreter } from "xstate";
+
+function Dots({
+  dots,
+  onDotClick,
+  activeIndex
+}: {
+  dots: any[];
+  onDotClick: Function;
+  activeIndex: number;
+}) {
+  return (
+    <div style={{ textAlign: "center" }}>
+      {dots.map((_, i) => (
+        <div
+          key={i}
+          style={{
+            width: 10,
+            height: 10,
+            backgroundColor: i === activeIndex ? "orange" : "#eee",
+            borderRadius: "50%",
+            display: "inline-block",
+            margin: "0 5px",
+            cursor: "pointer"
+          }}
+          onClick={() => {
+            // Send the cursor of the group (1...ctx.groups.length)
+            onDotClick({ type: "GO_TO", data: i + 1 });
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export type CarouselProps = {
   items: JSX.Element[];
@@ -12,6 +46,7 @@ export type CarouselProps = {
   autoPlay?: number;
   dir?: Dir;
   infinite?: boolean;
+  slidesToShow?: number;
 };
 export function Carousel({
   items,
@@ -19,7 +54,8 @@ export function Carousel({
   startIndex = 1,
   autoPlay,
   dir = "ltr",
-  infinite = false
+  infinite = false,
+  slidesToShow = 1
 }: CarouselProps) {
   const [state, sendEvent, service] = useMachine(
     carouselMachineFactory({
@@ -27,33 +63,67 @@ export function Carousel({
       startIndex,
       autoPlay,
       dir,
-      infinite
+      infinite,
+      slidesToShow
     })
   );
-  useEffect(() => {
-    // service.onTransition(state => {
-    //   console.log(state.value, state.context);
-    // });
+  console.log(state);
+
+  // Calculate each item's width based on slidesToSHow
+  const [itemWidth, setItemWidth] = React.useState(1);
+  const listRef = React.useRef<HTMLDivElement>(null!);
+
+  React.useEffect(() => {
+    service.onTransition(state => {
+      if (state.changed) {
+        console.log(state.value);
+        console.log(state.context);
+      }
+    });
   }, [service]);
+
+  React.useLayoutEffect(() => {
+    setItemWidth(listRef.current.clientWidth / slidesToShow);
+  }, []);
+
+  if (!itemWidth) return null;
+
+  // Grouping items based on slidesToShow
+  const chunked = chunk(items, slidesToShow);
+  const totalWidth = totalItems * itemWidth;
+  const transitionSpan = (state.context.startCursor - 1) * -1 * itemWidth;
+
   return (
-    <div style={{ maxWidth: 764, margin: "0 auto" }}>
-      <div className="items-list">
+    <div>
+      <div className="items-list" ref={listRef}>
         <div
-          className="items-track"
+          className="items-track cf"
           style={{
-            width: totalItems * 764,
-            transform: `translate3d(${(state.context.cursor - 1) *
-              -764}px, 0, 0)`
+            width: totalWidth,
+            transform: `translate3d(${transitionSpan}px, 0, 0)`
           }}
         >
-          {items.map((item, idx) => (
+          {chunked.map((group, groupIdx) => (
             <div
-              className="item"
-              style={{ width: 764 }}
-              key={item.key || idx}
-              onClick={() => sendEvent({ type: "GO_TO", data: idx + 1 })}
+              className="cf items-group"
+              key={groupIdx}
+              id={`group-${groupIdx}`}
             >
-              {item}
+              {group.map((item, itemIdx) => (
+                <div
+                  className="item"
+                  style={{ width: itemWidth, overflow: "hidden" }}
+                  key={item.key || itemIdx}
+                  onClick={() =>
+                    sendEvent({ type: "GO_TO", data: itemIdx + 1 })
+                  }
+                >
+                  {React.cloneElement(item, {
+                    ...item.props,
+                    style: { ...item.props.style, maxWidth: "100%" }
+                  })}
+                </div>
+              ))}
             </div>
           ))}
         </div>
@@ -72,6 +142,15 @@ export function Carousel({
       >
         Prev
       </button>
+      <Dots
+        dots={state.context.groups}
+        onDotClick={sendEvent}
+        activeIndex={state.context.groups.findIndex(
+          g =>
+            g.start === state.context.startCursor &&
+            g.end === state.context.endCursor
+        )}
+      />
     </div>
   );
 }

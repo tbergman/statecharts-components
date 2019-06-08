@@ -3,31 +3,46 @@ import {
   CarouselContext,
   Dir,
   CarouselEvent,
-  CarouselStateSchema
+  CarouselStateSchema,
+  Group
 } from "./types";
-import { guards } from "./machine/guards";
 import { changeCursor } from "./machine/updater";
+import { constructGroups, indexInGroup } from "./utils";
 
+// e.data is the cursor of the group to which we need to transition
 const goTo = [
   {
     target: "first",
     cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-      guards.isFirstItem(e.data, ctx.min),
-    actions: [changeCursor(ctx => ctx.min)]
+      isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
+    actions: [
+      changeCursor(ctx => ({
+        start: ctx.min,
+        end: ctx.min + ctx.slidesToShow - 1
+      }))
+    ]
   },
   {
     target: "last",
     cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      guards.isCursorValid(e.data, ctx.min, ctx.max) &&
-      guards.isLastItem(e.data, ctx.max),
-    actions: [changeCursor(ctx => ctx.max)]
+      isCursorValid(e.data, ctx.min, ctx.max) && e.data === ctx.groups.length,
+    actions: [
+      changeCursor(ctx => ({
+        start: ctx.max - ctx.slidesToShow + 1,
+        end: ctx.max
+      }))
+    ]
   },
   {
     target: "middle",
     cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      guards.isCursorValid(e.data, ctx.min, ctx.max),
-    actions: [changeCursor((_, e) => e.data)]
+      isCursorValid(e.data, ctx.min, ctx.max),
+    actions: [
+      changeCursor((ctx, e) => ({
+        start: e.data,
+        end: e.data + ctx.slidesToShow - 1
+      }))
+    ]
   }
 ];
 
@@ -37,12 +52,21 @@ function hasAutoPlay(config: CarouselMachineFactoryConfig) {
   return config.autoPlay !== undefined && config.autoPlay > 0;
 }
 
+function isCursorValid(
+  nextCursor: number | undefined,
+  min: number,
+  max: number
+) {
+  return nextCursor !== undefined && nextCursor <= max && nextCursor >= min;
+}
+
 export interface CarouselMachineFactoryConfig {
   totalItems: number;
   startIndex: number;
   autoPlay?: number;
   dir?: Dir;
   infinite?: boolean;
+  slidesToShow?: number;
 }
 export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
   const {
@@ -50,51 +74,81 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
     startIndex,
     autoPlay,
     dir = "ltr",
-    infinite = false
+    infinite = false,
+    slidesToShow = 1
   } = config;
   if (startIndex < 1 || startIndex > totalItems) {
     throw Error(
       "invalid startIndex on carouselMachine. startIndex should satisfy 1 <= startIndex <= totalItems"
     );
   }
-  let initial: any = "first";
+
+  const groups = constructGroups(totalItems, slidesToShow);
+  const firstGroup = groups[0];
+  // TODO: check for invalid cases
+  const lastGroup = groups.slice().pop() as Group;
+
+  let initial: any;
   let initialContext: CarouselContext = {
-    cursor: startIndex,
+    startCursor: startIndex,
+    endCursor: startIndex + slidesToShow,
     min: 1,
     max: totalItems,
     dir,
-    infinite
+    infinite,
+    slidesToShow,
+    groups
   };
 
   // STATE AND STARTINDEX
-  if (startIndex === 1) {
+  if (indexInGroup(startIndex, firstGroup)) {
     initial = "first";
-  } else if (startIndex === totalItems) {
+    initialContext = {
+      ...initialContext,
+      startCursor: firstGroup.start,
+      endCursor: firstGroup.end
+    };
+  } else if (indexInGroup(startIndex, lastGroup)) {
     initial = "last";
+    initialContext = {
+      ...initialContext,
+      startCursor: lastGroup.start,
+      endCursor: lastGroup.end
+    };
   } else {
     initial = "middle";
-    initialContext = { ...initialContext, cursor: startIndex };
+    initialContext = {
+      ...initialContext,
+      startCursor: startIndex,
+      endCursor: startIndex + slidesToShow - 1
+    };
   }
 
   /**
    * States
    */
-
+  // TODO: For now, we assume all carousels have all 3 states. Need to handle unary and binary cases as well.
   const firstNext = [
-    {
-      target: "first",
-      cond: (ctx: CarouselContext) => ctx.min === ctx.max
-    },
     {
       target: "middle",
       cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [changeCursor(ctx => ctx.cursor + 1)]
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.startCursor + 1,
+          end: ctx.endCursor + 1
+        }))
+      ]
     },
     {
       target: "last",
       cond: (ctx: CarouselContext) =>
         ctx.dir === "rtl" && ctx.infinite === true,
-      actions: [changeCursor(ctx => ctx.max)]
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.max - ctx.slidesToShow + 1,
+          end: ctx.max
+        }))
+      ]
     }
   ];
   const first = {
@@ -110,12 +164,22 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
           target: "last",
           cond: (ctx: CarouselContext) =>
             ctx.dir === "ltr" && ctx.infinite === true,
-          actions: [changeCursor(ctx => ctx.max)]
+          actions: [
+            changeCursor(ctx => ({
+              start: ctx.max - ctx.slidesToShow + 1,
+              end: ctx.max
+            }))
+          ]
         },
         {
           target: "middle",
           cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-          actions: [changeCursor(ctx => ctx.cursor + 1)]
+          actions: [
+            changeCursor(ctx => ({
+              start: ctx.startCursor + 1,
+              end: ctx.endCursor + 1
+            }))
+          ]
         }
       ],
       GO_TO: goTo
@@ -127,12 +191,22 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
       target: "first",
       cond: (ctx: CarouselContext) =>
         ctx.dir === "ltr" && ctx.infinite === true,
-      actions: [changeCursor(ctx => ctx.min)]
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.min,
+          end: ctx.min + ctx.slidesToShow - 1
+        }))
+      ]
     },
     {
       target: "middle",
       cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-      actions: [changeCursor(ctx => ctx.cursor - 1)]
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.startCursor - 1,
+          end: ctx.endCursor - 1
+        }))
+      ]
     }
   ];
   const last = {
@@ -147,13 +221,23 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
         {
           target: "middle",
           cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-          actions: [changeCursor(ctx => ctx.cursor - 1)]
+          actions: [
+            changeCursor(ctx => ({
+              start: ctx.startCursor - 1,
+              end: ctx.endCursor - 1
+            }))
+          ]
         },
         {
           target: "first",
           cond: (ctx: CarouselContext) =>
             ctx.dir === "rtl" && ctx.infinite === true,
-          actions: [changeCursor(ctx => ctx.min)]
+          actions: [
+            changeCursor(ctx => ({
+              start: ctx.min,
+              end: ctx.min + ctx.slidesToShow - 1
+            }))
+          ]
         }
       ],
       GO_TO: goTo
@@ -166,16 +250,26 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
       target: "last",
       id: "middle-next-last",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "ltr" && ctx.cursor + 1 === ctx.max,
-      actions: [changeCursor(ctx => ctx.max)]
+        ctx.dir === "ltr" && indexInGroup(ctx.startCursor + 1, lastGroup),
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.max - ctx.slidesToShow + 1,
+          end: ctx.max
+        }))
+      ]
     },
     // first item in middle going back becasue of rtl dir
     {
       target: "first",
       id: "middle-next-first",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "rtl" && ctx.cursor - 1 === ctx.min,
-      actions: [changeCursor(ctx => ctx.min)]
+        ctx.dir === "rtl" && ctx.startCursor - 1 === ctx.min,
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.min,
+          end: ctx.min + ctx.slidesToShow - 1
+        }))
+      ]
     },
     // middle to middle in ltr
     {
@@ -183,7 +277,12 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
       id: "middle-next-middle-ltr",
       key: "middle-next-middle-ltr",
       cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [changeCursor(ctx => ctx.cursor + 1)]
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.startCursor + 1,
+          end: ctx.endCursor + 1
+        }))
+      ]
     },
     // middle to middle in rtl
     {
@@ -191,7 +290,12 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
       id: "middle-next-middle-rtl",
       key: "middle-next-middle-rtl",
       cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-      actions: [changeCursor(ctx => ctx.cursor - 1)]
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.startCursor - 1,
+          end: ctx.endCursor - 1
+        }))
+      ]
     }
   ];
   const middlePrev = [
@@ -201,8 +305,14 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
       id: "middle-prev-first",
       key: "middle-prev-first",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "ltr" && ctx.cursor - 1 === ctx.min,
-      actions: [changeCursor(ctx => ctx.min)]
+        // on Prev of ltr carousel, goes from middle to first, if the next cursor (ctx.startCursor - 1) is the first item
+        ctx.dir === "ltr" && ctx.startCursor - 1 === ctx.min,
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.min,
+          end: ctx.min + ctx.slidesToShow - 1
+        }))
+      ]
     },
     // first item in middle going back becasue of rtl dir
     {
@@ -210,8 +320,13 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
       id: "middle-prev-last",
       key: "middle-prev-last",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "rtl" && ctx.cursor + 1 === ctx.max,
-      actions: [changeCursor(ctx => ctx.max)]
+        ctx.dir === "rtl" && indexInGroup(ctx.startCursor + 1, lastGroup),
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.max - ctx.slidesToShow + 1,
+          end: ctx.max
+        }))
+      ]
     },
     // middle to middle in ltr
     {
@@ -219,7 +334,12 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
       id: "middle-prev-middle-ltr",
       key: "middle-prev-middle-ltr",
       cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [changeCursor(ctx => ctx.cursor - 1)]
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.startCursor - 1,
+          end: ctx.endCursor - 1
+        }))
+      ]
     },
     // middle to middle in rtl
     {
@@ -227,7 +347,12 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
       id: "middle-prev-middle-rtl",
       key: "middle-prev-middle-rtl",
       cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-      actions: [changeCursor(ctx => ctx.cursor + 1)]
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.startCursor + 1,
+          end: ctx.endCursor + 1
+        }))
+      ]
     }
   ];
   // for middle, both NEXT and PREV can result in same situations depending on item position and dir

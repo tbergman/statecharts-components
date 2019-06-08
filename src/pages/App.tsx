@@ -73,7 +73,7 @@ const carousels: CarouselProps[] = [
     infinite: true
   },
   {
-    items: getRange(5).map((value, idx) => (
+    items: getRange(10).map((value, idx) => (
       <span
         style={{
           height: 100,
@@ -91,18 +91,30 @@ const carousels: CarouselProps[] = [
         {value}
       </span>
     )),
-    totalItems: 5,
-    startIndex: 2,
+    totalItems: 10,
+    startIndex: 9,
+    slidesToShow: 3,
     dir: "rtl",
     infinite: true
   },
   {
-    items: getRange(4)
+    items: getRange(7)
       .map(i => `https://picsum.photos/900/300?random=${i}}`)
       .map((src, idx) => <img src={src} alt={src} key={idx} />),
-    totalItems: 4,
-    startIndex: 4,
+    totalItems: 7,
+    startIndex: 2,
+    slidesToShow: 2,
     autoPlay: 2000,
+    infinite: true
+  },
+  {
+    items: getRange(5)
+      .map(i => `https://picsum.photos/900/300?random=${i}}`)
+      .map((src, idx) => <img src={src} alt={src} key={idx} />),
+    totalItems: 5,
+    startIndex: 1,
+    slidesToShow: 3,
+    autoPlay: 500,
     infinite: true
   }
 ];
@@ -110,13 +122,16 @@ const carousels: CarouselProps[] = [
 export function App() {
   return (
     <div style={{ margin: 30 }}>
-      {carousels.map((c, i) => {
-        return (
-          <DemoSection config={c} key={i}>
-            <Carousel {...c} />
-          </DemoSection>
-        );
-      })}
+      {carousels
+        .slice()
+        .reverse()
+        .map((c, i) => {
+          return (
+            <DemoSection config={c} key={i}>
+              <Carousel {...c} />
+            </DemoSection>
+          );
+        })}
     </div>
   );
 }

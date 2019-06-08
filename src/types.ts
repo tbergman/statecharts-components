@@ -2,11 +2,14 @@ import { EventObject, StateNodeConfig } from "xstate";
 
 export type CarouselState = "first" | "middle" | "last";
 export type CarouselContext = {
-  cursor: number;
+  startCursor: number;
+  endCursor: number;
   min: number;
   max: number;
   dir: Dir;
   infinite: boolean;
+  slidesToShow: number;
+  groups: Group[];
 };
 export type CarouselStateSchema = {
   states: {
@@ -25,3 +28,5 @@ export type CarouselStateNodeConfig = StateNodeConfig<
   CarouselStateSchema,
   CarouselEvent
 >;
+
+export type Group = { start: number; end: number };

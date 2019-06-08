@@ -24,13 +24,19 @@
   transition: transform 350ms ease;
 }
 
-.items-track:before,
-.items-track:after {
+.items-group {
+  float: left;
+  height: 100%;
+  min-height: 1px;
+}
+
+.cf:before,
+.cf:after {
   display: table;
   content: " ";
   zoom: 1;
 }
-.items-track:after {
+.cf:after {
   clear: both;
 }
 
@@ -38,15 +44,4 @@
   float: left;
   height: 100%;
   min-height: 1px;
-}
-
-.item-value {
-  background: #5f9ea0;
-  color: #fff;
-  font-size: 36px;
-  line-height: 100px;
-  margin: 10px;
-  padding: 2%;
-  position: relative;
-  text-align: center;
 }
