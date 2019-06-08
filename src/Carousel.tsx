@@ -49,12 +49,11 @@ export type CarouselProps = {
   slidesToShow?: number;
 };
 export function Carousel(props: CarouselProps) {
-  const settings = { ...props, ...defaultConfig };
+  const settings = { ...defaultConfig, ...props };
   const { items, totalItems, slidesToShow } = settings;
   const [state, sendEvent, service] = useMachine(
     carouselMachineFactory(settings)
   );
-  console.log(state.nextEvents);
 
   // Calculate each item's width based on slidesToSHow
   const [itemWidth, setItemWidth] = React.useState(1);
@@ -63,9 +62,9 @@ export function Carousel(props: CarouselProps) {
   React.useEffect(() => {
     service.onTransition(state => {
       if (state.changed) {
-        console.log(state.value);
-        console.log(state.nextEvents);
-        console.log(state.context);
+        // console.log(state.value);
+        // console.log(state.nextEvents);
+        // console.log(state.context);
       }
     });
   }, [service]);

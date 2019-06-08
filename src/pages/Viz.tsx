@@ -4,14 +4,14 @@ import { carouselMachineFactory } from "../machine/factory";
 import { defaultConfig } from "../machine/config";
 
 const settings = {
+  ...defaultConfig,
   ...{
     totalItems: 7,
     startIndex: 2,
     slidesToShow: 2,
     autoPlay: 2000,
     infinite: true
-  },
-  ...defaultConfig
+  }
 };
 const machine = carouselMachineFactory(settings);
 

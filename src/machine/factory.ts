@@ -16,8 +16,8 @@ export interface CarouselMachineFactoryConfig {
 
 export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
   const settings = {
-    ...config,
-    ...defaultConfig
+    ...defaultConfig,
+    ...config
   };
   const { totalItems, startIndex, autoPlay, slidesToShow } = settings;
 
