@@ -73,6 +73,54 @@ const carousels: CarouselProps[] = [
     infinite: true
   },
   {
+    items: getRange(2).map((value, idx) => (
+      <p
+        style={{
+          height: 50,
+          backgroundColor: "red",
+          color: "white",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: 20,
+          fontFamily: "monospace"
+        }}
+        key={idx}
+      >
+        {value}
+      </p>
+    )),
+    totalItems: 2,
+    startIndex: 1,
+    dir: "ltr",
+    infinite: true
+  },
+  {
+    items: getRange(11).map((value, idx) => (
+      <p
+        style={{
+          height: 50,
+          backgroundColor: "red",
+          color: "white",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: 20,
+          fontFamily: "monospace"
+        }}
+        key={idx}
+      >
+        {value}
+      </p>
+    )),
+    totalItems: 11,
+    slidesToShow: 3,
+    startIndex: 1,
+    autoPlay: 3000,
+    infinite: true,
+    dir: "rtl"
+  },
+  {
     items: getRange(10).map((value, idx) => (
       <span
         style={{
