@@ -1,4 +1,5 @@
 import { Group } from "./types";
+import { CarouselMachineFactoryConfig } from "./machine/factory";
 
 export function getRange(length: number) {
   const result: number[] = [];
@@ -28,4 +29,39 @@ export function constructGroups(
 
 export function indexInGroup(index: number, group: Group) {
   return index <= group.end && index >= group.start;
+}
+
+// Machine will have transitions if the groups are more than 1
+export function hasTransition(config: CarouselMachineFactoryConfig) {
+  return (
+    constructGroups(config.totalItems, config.slidesToShow || 1).length > 1
+  );
+}
+
+export function isAutoPlayValidNumber(
+  autoPlay: CarouselMachineFactoryConfig["autoPlay"]
+) {
+  return (
+    autoPlay !== undefined &&
+    !isNaN(autoPlay) &&
+    isFinite(autoPlay) &&
+    autoPlay > 0
+  );
+}
+
+// indicate whether we should include autoPlay in machine definition or not
+export function hasAutoPlay(config: CarouselMachineFactoryConfig) {
+  return (
+    config.autoPlay !== undefined &&
+    isAutoPlayValidNumber(config.autoPlay) &&
+    hasTransition(config)
+  );
+}
+
+export function isCursorValid(
+  nextCursor: number | undefined,
+  min: number,
+  max: number
+) {
+  return nextCursor !== undefined && nextCursor <= max && nextCursor >= min;
 }

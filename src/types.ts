@@ -18,6 +18,17 @@ export type CarouselStateSchema = {
     last: {};
   };
 };
+export type UnaryCarouselStateSchema = {
+  states: {
+    running: {};
+  };
+};
+export type BinaryCarouselStateSchema = {
+  states: {
+    first: {};
+    last: {};
+  };
+};
 
 export type CarouselEvent = EventObject;
 

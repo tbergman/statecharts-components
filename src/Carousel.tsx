@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useMachine } from "@xstate/react";
 import chunk from "lodash.chunk";
-import { carouselMachineFactory } from "./machine";
+import { carouselMachineFactory } from "./machine/factory";
 import { Dir } from "./types";
 import "./Carousel.css";
-import { Interpreter } from "xstate";
+import { defaultConfig } from "./machine/config";
 
 function Dots({
   dots,
@@ -48,26 +48,13 @@ export type CarouselProps = {
   infinite?: boolean;
   slidesToShow?: number;
 };
-export function Carousel({
-  items,
-  totalItems,
-  startIndex = 1,
-  autoPlay,
-  dir = "ltr",
-  infinite = false,
-  slidesToShow = 1
-}: CarouselProps) {
+export function Carousel(props: CarouselProps) {
+  const settings = { ...props, ...defaultConfig };
+  const { items, totalItems, slidesToShow } = settings;
   const [state, sendEvent, service] = useMachine(
-    carouselMachineFactory({
-      totalItems,
-      startIndex,
-      autoPlay,
-      dir,
-      infinite,
-      slidesToShow
-    })
+    carouselMachineFactory(settings)
   );
-  console.log(state);
+  console.log(state.nextEvents);
 
   // Calculate each item's width based on slidesToSHow
   const [itemWidth, setItemWidth] = React.useState(1);
@@ -77,13 +64,14 @@ export function Carousel({
     service.onTransition(state => {
       if (state.changed) {
         console.log(state.value);
+        console.log(state.nextEvents);
         console.log(state.context);
       }
     });
   }, [service]);
 
   React.useLayoutEffect(() => {
-    setItemWidth(listRef.current.clientWidth / slidesToShow);
+    setItemWidth(listRef.current.clientWidth / (slidesToShow as number));
   }, []);
 
   if (!itemWidth) return null;

@@ -1,14 +1,19 @@
 import * as React from "react";
 import { StateChart } from "@statecharts/xstate-viz";
-import { carouselMachineFactory } from "../machine";
+import { carouselMachineFactory } from "../machine/factory";
+import { defaultConfig } from "../machine/config";
 
-const machine = carouselMachineFactory({
-  totalItems: 1,
-  startIndex: 1,
-  dir: "ltr",
-  autoPlay: 500,
-  infinite: false
-});
+const settings = {
+  ...{
+    totalItems: 7,
+    startIndex: 2,
+    slidesToShow: 2,
+    autoPlay: 2000,
+    infinite: true
+  },
+  ...defaultConfig
+};
+const machine = carouselMachineFactory(settings);
 
 export function Viz() {
   return (
