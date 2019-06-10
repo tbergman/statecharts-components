@@ -4,7 +4,8 @@ import {
   hasAutoPlay,
   isCursorValid,
   indexInGroup,
-  constructGroups
+  constructGroups,
+  isEven
 } from "../utils";
 import {
   CarouselContext,
@@ -22,19 +23,19 @@ const goTo = [
       isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
     actions: [
       changeCursor(ctx => ({
-        start: ctx.min,
-        end: ctx.min + ctx.slidesToShow - 1
+        start: 1,
+        end: 1
       }))
     ]
   },
   {
     target: "last",
     cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      isCursorValid(e.data, ctx.min, ctx.max) && e.data === ctx.groups.length,
+      isCursorValid(e.data, ctx.min, ctx.max) && e.data === 2,
     actions: [
       changeCursor(ctx => ({
-        start: ctx.max - ctx.slidesToShow + 1,
-        end: ctx.max
+        start: 2,
+        end: 2
       }))
     ]
   }
@@ -57,45 +58,17 @@ export function binaryCarouselMachine(config: BinaryConfig) {
   } = config;
   const firstNext = [
     {
-      target: "last",
-      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [
-        changeCursor(ctx => ({
-          start: ctx.max - ctx.slidesToShow + 1,
-          end: ctx.min
-        }))
-      ]
-    },
-    {
-      target: "last",
+      target: "first",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "rtl" && ctx.infinite === true,
-      actions: [
-        changeCursor(ctx => ({
-          start: ctx.max - ctx.slidesToShow + 1,
-          end: ctx.min
-        }))
-      ]
-    }
-  ];
-  const firstPrev = [
-    {
-      target: "last",
-      cond: (ctx: CarouselContext) => ctx.infinite === true,
-      actions: [
-        changeCursor(ctx => ({
-          start: ctx.max - ctx.slidesToShow + 1,
-          end: ctx.min
-        }))
-      ]
+        (ctx.infinite === true && isEven(ctx.slidesToScroll)) ||
+        (ctx.infinite === false && ctx.slidesToScroll > 1)
     },
     {
       target: "last",
-      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
       actions: [
         changeCursor(ctx => ({
-          start: ctx.max - ctx.slidesToShow + 1,
-          end: ctx.min
+          start: 2,
+          end: 2
         }))
       ]
     }
@@ -108,52 +81,23 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     }),
     on: {
       NEXT: firstNext,
-      PREV: firstPrev,
+      PREV: firstNext,
       GO_TO: goTo
     }
   };
   const lastNext = [
     {
-      target: "first",
+      target: "last",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "ltr" && ctx.infinite === true,
-      actions: [
-        changeCursor(ctx => ({
-          start: ctx.min,
-          end: ctx.min + ctx.slidesToShow - 1
-        }))
-      ]
+        (ctx.infinite === true && isEven(ctx.slidesToScroll)) ||
+        (ctx.infinite === false && ctx.slidesToScroll > 1)
     },
     {
       target: "first",
-      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
       actions: [
         changeCursor(ctx => ({
-          start: ctx.min,
-          end: ctx.min + ctx.slidesToShow - 1
-        }))
-      ]
-    }
-  ];
-  const lastPrev = [
-    {
-      target: "first",
-      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [
-        changeCursor(ctx => ({
-          start: ctx.min,
-          end: ctx.min + ctx.slidesToShow - 1
-        }))
-      ]
-    },
-    {
-      target: "first",
-      cond: (ctx: CarouselContext) =>
-        ctx.dir === "rtl" && ctx.infinite === true,
-      actions: [
-        changeCursor(ctx => ({
-          start: ctx.min,
-          end: ctx.min + ctx.slidesToShow - 1
+          start: 1,
+          end: 1
         }))
       ]
     }
@@ -166,7 +110,7 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     }),
     on: {
       NEXT: lastNext,
-      PREV: lastPrev,
+      PREV: lastNext,
       GO_TO: goTo
     }
   };
