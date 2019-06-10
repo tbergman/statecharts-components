@@ -64,7 +64,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     totalItems,
     dir,
     infinite,
-    autoPlay
+    autoPlay,
+    slidesToScroll
   } = config;
   const groups = constructGroups(totalItems, slidesToShow);
 
@@ -81,6 +82,7 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     dir,
     infinite,
     slidesToShow,
+    slidesToScroll,
     groups
   };
 
@@ -117,8 +119,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       cond: (ctx: CarouselContext) => ctx.dir === "ltr",
       actions: [
         changeCursor(ctx => ({
-          start: ctx.startCursor + 1,
-          end: ctx.endCursor + 1
+          start: ctx.startCursor + ctx.slidesToScroll,
+          end: ctx.endCursor + ctx.slidesToScroll
         }))
       ]
     },
@@ -159,8 +161,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
           cond: (ctx: CarouselContext) => ctx.dir === "rtl",
           actions: [
             changeCursor(ctx => ({
-              start: ctx.startCursor + 1,
-              end: ctx.endCursor + 1
+              start: ctx.startCursor + ctx.slidesToScroll,
+              end: ctx.endCursor + ctx.slidesToScroll
             }))
           ]
         }
@@ -186,8 +188,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       cond: (ctx: CarouselContext) => ctx.dir === "rtl",
       actions: [
         changeCursor(ctx => ({
-          start: ctx.startCursor - 1,
-          end: ctx.endCursor - 1
+          start: ctx.startCursor - ctx.slidesToScroll,
+          end: ctx.endCursor - ctx.slidesToScroll
         }))
       ]
     }
@@ -206,8 +208,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
           cond: (ctx: CarouselContext) => ctx.dir === "ltr",
           actions: [
             changeCursor(ctx => ({
-              start: ctx.startCursor - 1,
-              end: ctx.endCursor - 1
+              start: ctx.startCursor - ctx.slidesToScroll,
+              end: ctx.endCursor - ctx.slidesToScroll
             }))
           ]
         },
@@ -233,7 +235,9 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       target: "last",
       id: "middle-next-last",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "ltr" && indexInGroup(ctx.startCursor + 1, lastGroup),
+        ctx.dir === "ltr" &&
+        // indexInGroup(ctx.startCursor + ctx.slidesToScroll, lastGroup),
+        ctx.startCursor + ctx.slidesToScroll >= lastGroup.start,
       actions: [
         changeCursor(ctx => ({
           start: ctx.max - ctx.slidesToShow + 1,
@@ -246,7 +250,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       target: "first",
       id: "middle-next-first",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "rtl" && ctx.startCursor - 1 === ctx.min,
+        // ctx.dir === "rtl" && ctx.startCursor - ctx.slidesToScroll === ctx.min,
+        ctx.dir === "rtl" && ctx.startCursor - ctx.slidesToScroll <= ctx.min,
       actions: [
         changeCursor(ctx => ({
           start: ctx.min,
@@ -262,8 +267,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       cond: (ctx: CarouselContext) => ctx.dir === "ltr",
       actions: [
         changeCursor(ctx => ({
-          start: ctx.startCursor + 1,
-          end: ctx.endCursor + 1
+          start: ctx.startCursor + ctx.slidesToScroll,
+          end: ctx.endCursor + ctx.slidesToScroll
         }))
       ]
     },
@@ -275,8 +280,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       cond: (ctx: CarouselContext) => ctx.dir === "rtl",
       actions: [
         changeCursor(ctx => ({
-          start: ctx.startCursor - 1,
-          end: ctx.endCursor - 1
+          start: ctx.startCursor - ctx.slidesToScroll,
+          end: ctx.endCursor - ctx.slidesToScroll
         }))
       ]
     }
@@ -289,7 +294,7 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       key: "middle-prev-first",
       cond: (ctx: CarouselContext) =>
         // on Prev of ltr carousel, goes from middle to first, if the next cursor (ctx.startCursor - 1) is the first item
-        ctx.dir === "ltr" && ctx.startCursor - 1 === ctx.min,
+        ctx.dir === "ltr" && ctx.startCursor - ctx.slidesToScroll <= ctx.min,
       actions: [
         changeCursor(ctx => ({
           start: ctx.min,
@@ -303,7 +308,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       id: "middle-prev-last",
       key: "middle-prev-last",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "rtl" && indexInGroup(ctx.startCursor + 1, lastGroup),
+        ctx.dir === "rtl" &&
+        indexInGroup(ctx.startCursor + ctx.slidesToScroll, lastGroup),
       actions: [
         changeCursor(ctx => ({
           start: ctx.max - ctx.slidesToShow + 1,
@@ -319,8 +325,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       cond: (ctx: CarouselContext) => ctx.dir === "ltr",
       actions: [
         changeCursor(ctx => ({
-          start: ctx.startCursor - 1,
-          end: ctx.endCursor - 1
+          start: ctx.startCursor - ctx.slidesToScroll,
+          end: ctx.endCursor - ctx.slidesToScroll
         }))
       ]
     },
@@ -332,8 +338,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       cond: (ctx: CarouselContext) => ctx.dir === "rtl",
       actions: [
         changeCursor(ctx => ({
-          start: ctx.startCursor + 1,
-          end: ctx.endCursor + 1
+          start: ctx.startCursor + ctx.slidesToScroll,
+          end: ctx.endCursor + ctx.slidesToScroll
         }))
       ]
     }

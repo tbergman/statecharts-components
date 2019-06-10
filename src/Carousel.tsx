@@ -47,7 +47,9 @@ export type CarouselProps = {
   dir?: Dir;
   infinite?: boolean;
   slidesToShow?: number;
+  slidesToScroll?: number;
 };
+
 export function Carousel(props: CarouselProps) {
   const settings = { ...defaultConfig, ...props };
   const { items, totalItems, slidesToShow } = settings;
@@ -62,9 +64,9 @@ export function Carousel(props: CarouselProps) {
   React.useEffect(() => {
     service.onTransition(state => {
       if (state.changed) {
-        // console.log(state.value);
+        console.log(state.value);
         // console.log(state.nextEvents);
-        // console.log(state.context);
+        console.log(state.context);
       }
     });
   }, [service]);

@@ -14,7 +14,14 @@ interface UnaryConfig extends CarouselMachineFactoryConfig {
   slidesToShow: number;
 }
 export function unaryCarouselMachine(config: UnaryConfig) {
-  const { startIndex, slidesToShow, totalItems, dir, infinite } = config;
+  const {
+    startIndex,
+    slidesToShow,
+    totalItems,
+    dir,
+    infinite,
+    slidesToScroll
+  } = config;
   const groups = constructGroups(totalItems, slidesToShow);
   return Machine<CarouselContext, UnaryCarouselStateSchema, CarouselEvent>({
     id: "unaryCarousel",
@@ -27,6 +34,7 @@ export function unaryCarouselMachine(config: UnaryConfig) {
       dir,
       infinite,
       slidesToShow,
+      slidesToScroll,
       groups
     },
     states: {

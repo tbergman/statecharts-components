@@ -12,6 +12,7 @@ export interface CarouselMachineFactoryConfig {
   dir: Dir;
   infinite: boolean;
   slidesToShow: number;
+  slidesToScroll: number;
 }
 
 export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
@@ -24,7 +25,7 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
   // Validate startIndex to be a number in the range of min and amx
   if (startIndex < 1 || startIndex > totalItems) {
     throw Error(
-      "invalid property `startIndex` on carouselMachine. `startIndex` should satisfy 1 <= startIndex <= totalItems"
+      `invalid property \`startIndex\` on carouselMachine. \`startIndex\` should satisfy (1 <= startIndex <= totalItems)\n\`slidesToShow\` can not be ${slidesToShow} when \`totalItems\` is ${totalItems}`
     );
   }
   // Validate autoPlay to be a valid number (autoPlay can be number | undefined. we just validate the number part here)
@@ -34,7 +35,7 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
   // Validate slidesToShow to be a number in the range of min and max
   if (slidesToShow < 1 || slidesToShow > totalItems) {
     throw Error(
-      "invalid property `slidesToShow` on carouselMachine. `slidesToShow` should satisfy 1 <= slidesToShow <= totalItems"
+      `invalid property \`slidesToShow\` on carouselMachine. \`slidesToShow\` should satisfy (1 <= slidesToShow <= totalItems)\n\`slidesToShow\` can not be ${slidesToShow} when \`totalItems\` is ${totalItems}`
     );
   }
 

@@ -4,5 +4,6 @@ export const defaultConfig = {
   dir: "ltr" as Dir,
   infinite: false,
   slidesToShow: 1,
-  startIndex: 1
+  startIndex: 1,
+  slidesToScroll: 1
 };

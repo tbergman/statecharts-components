@@ -52,7 +52,8 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     slidesToShow,
     infinite,
     autoPlay,
-    dir
+    dir,
+    slidesToScroll
   } = config;
   const firstNext = [
     {
@@ -179,6 +180,7 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     dir,
     infinite,
     slidesToShow,
+    slidesToScroll,
     groups
   };
   if (indexInGroup(startIndex, groups[0])) {

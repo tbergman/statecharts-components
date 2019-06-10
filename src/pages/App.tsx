@@ -11,7 +11,7 @@ function DemoSection({
 }) {
   const { items, ...restConfig } = config;
   return (
-    <div>
+    <div style={{ padding: 15, border: "1px dotted" }}>
       <h3>
         <pre style={{ backgroundColor: "#eee", display: "block", padding: 5 }}>
           {JSON.stringify(restConfig, null, 2)}
@@ -24,104 +24,7 @@ function DemoSection({
 
 const carousels: CarouselProps[] = [
   {
-    items: getRange(3).map((value, idx) => (
-      <h3
-        style={{
-          height: 200,
-          backgroundColor: "teal",
-          color: "white",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontSize: 50,
-          margin: 0,
-          fontFamily: "monospace"
-        }}
-        key={idx}
-      >
-        {value}
-      </h3>
-    )),
-    totalItems: 3,
-    startIndex: 2,
-    dir: "ltr",
-    autoPlay: 1500,
-    infinite: true
-  },
-  {
-    items: getRange(1).map((value, idx) => (
-      <p
-        style={{
-          height: 50,
-          backgroundColor: "red",
-          color: "white",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontSize: 20,
-          margin: 0,
-          fontFamily: "monospace"
-        }}
-        key={idx}
-      >
-        {value}
-      </p>
-    )),
-    totalItems: 1,
-    startIndex: 1,
-    dir: "ltr",
-    infinite: true
-  },
-  {
-    items: getRange(2).map((value, idx) => (
-      <p
-        style={{
-          height: 50,
-          backgroundColor: "red",
-          color: "white",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontSize: 20,
-          fontFamily: "monospace"
-        }}
-        key={idx}
-      >
-        {value}
-      </p>
-    )),
-    totalItems: 2,
-    startIndex: 1,
-    dir: "ltr",
-    infinite: true
-  },
-  {
-    items: getRange(11).map((value, idx) => (
-      <p
-        style={{
-          height: 50,
-          backgroundColor: "red",
-          color: "white",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontSize: 20,
-          fontFamily: "monospace"
-        }}
-        key={idx}
-      >
-        {value}
-      </p>
-    )),
-    totalItems: 11,
-    slidesToShow: 3,
-    startIndex: 1,
-    autoPlay: 3000,
-    infinite: true,
-    dir: "rtl"
-  },
-  {
-    items: getRange(10).map((value, idx) => (
+    items: getRange(7).map(i => (
       <span
         style={{
           height: 100,
@@ -134,36 +37,17 @@ const carousels: CarouselProps[] = [
           margin: 0,
           fontFamily: "monospace"
         }}
-        key={idx}
+        key={i}
       >
-        {value}
+        {i}
       </span>
     )),
-    totalItems: 10,
-    startIndex: 9,
-    slidesToShow: 3,
-    dir: "rtl",
-    infinite: true
-  },
-  {
-    items: getRange(7)
-      .map(i => `https://picsum.photos/900/300?random=${i}}`)
-      .map((src, idx) => <img src={src} alt={src} key={idx} />),
-    totalItems: 7,
-    startIndex: 2,
-    slidesToShow: 2,
-    autoPlay: 2000,
-    infinite: true
-  },
-  {
-    items: getRange(5)
-      .map(i => `https://picsum.photos/900/300?random=${i}}`)
-      .map((src, idx) => <img src={src} alt={src} key={idx} />),
-    totalItems: 5,
+    totalItems: 1,
     startIndex: 1,
-    slidesToShow: 3,
-    autoPlay: 500,
-    infinite: true
+    slidesToShow: 2,
+    slidesToScroll: 2,
+    dir: "rtl",
+    infinite: false
   }
 ];
 
