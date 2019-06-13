@@ -99,7 +99,7 @@ const carousels: CarouselProps[] = [
     infinite: false
   },
   {
-    items: getRange(2).map(i => (
+    items: getRange(10).map(i => (
       <span
         style={{
           height: 100,
@@ -117,12 +117,38 @@ const carousels: CarouselProps[] = [
         {i}
       </span>
     )),
-    totalItems: 4,
+    totalItems: 10,
     startIndex: 1,
-    slidesToShow: 2,
-    slidesToScroll: 2,
+    slidesToShow: 3,
+    slidesToScroll: 5,
     dir: "ltr",
-    infinite: false
+    infinite: true
+  },
+  {
+    items: getRange(10).map(i => (
+      <span
+        style={{
+          height: 100,
+          backgroundColor: "orange",
+          color: "black",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: 50,
+          margin: 0,
+          fontFamily: "monospace"
+        }}
+        key={i}
+      >
+        {i}
+      </span>
+    )),
+    totalItems: 10,
+    startIndex: 1,
+    slidesToShow: 3,
+    slidesToScroll: 4,
+    dir: "rtl",
+    infinite: true
   }
 ];
 

@@ -62,6 +62,10 @@ export function Carousel(props: CarouselProps) {
   const listRef = React.useRef<HTMLDivElement>(null!);
 
   React.useEffect(() => {
+    console.log(state.value, state.context);
+  }, []);
+
+  React.useEffect(() => {
     service.onTransition(state => {
       if (state.changed) {
         console.log(state.value);
