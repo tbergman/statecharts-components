@@ -188,9 +188,8 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       cond: (ctx: CarouselContext) => ctx.dir === "rtl",
       actions: [
         changeCursor(ctx => ({
-          // Summing with ctx.max will bring the number back to positive alternative
-          start: ctx.startCursor - (ctx.slidesToScroll % ctx.max),
-          end: ctx.endCursor - (ctx.slidesToScroll % ctx.max)
+          start: ctx.startCursor + (ctx.slidesToScroll % ctx.max),
+          end: ctx.endCursor + (ctx.slidesToScroll % ctx.max)
         }))
       ]
     }
@@ -226,7 +225,7 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
       cond: (ctx: CarouselContext) =>
         // Hit deadend from the end when start is at least at lastGroup's start
         (ctx.dir === "rtl" &&
-          ctx.startCursor + (ctx.slidesToScroll % ctx.max) >=
+          ctx.startCursor + (ctx.slidesToScroll % ctx.max) <=
             firstGroup.start) ||
         (ctx.infinite === true && ctx.dir === "ltr"),
       actions: [
@@ -268,7 +267,7 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
         (ctx.dir === "ltr" &&
           ctx.startCursor - (ctx.slidesToScroll % ctx.max) <=
             firstGroup.start) ||
-        (ctx.dir === "rtl" && ctx.infinite === false),
+        (ctx.dir === "rtl" && ctx.infinite === true),
       actions: [
         changeCursor(ctx => ({
           start: firstGroup.start,
@@ -279,9 +278,9 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     {
       // Any other case besides above ones will go to middle
       target: "middle",
+      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
       actions: [
         changeCursor(ctx => ({
-          // Summing with ctx.max will bring the number back to positive alternative
           start: ctx.startCursor - (ctx.slidesToScroll % ctx.max),
           end: ctx.endCursor - (ctx.slidesToScroll % ctx.max)
         }))
