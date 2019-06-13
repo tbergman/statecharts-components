@@ -60,8 +60,7 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     {
       target: "first",
       cond: (ctx: CarouselContext) =>
-        (ctx.infinite === true && isEven(ctx.slidesToScroll)) ||
-        (ctx.infinite === false && ctx.dir === "rtl")
+        ctx.infinite === false && ctx.dir === "rtl"
     },
     {
       target: "last",
@@ -77,8 +76,7 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     {
       target: "first",
       cond: (ctx: CarouselContext) =>
-        (ctx.infinite === true && isEven(ctx.slidesToScroll)) ||
-        (ctx.infinite === false && ctx.dir === "ltr")
+        ctx.infinite === false && ctx.dir === "ltr"
     },
     {
       target: "last",
@@ -106,8 +104,7 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     {
       target: "last",
       cond: (ctx: CarouselContext) =>
-        (ctx.infinite === true && isEven(ctx.slidesToScroll)) ||
-        (ctx.infinite === false && ctx.dir === "ltr")
+        ctx.infinite === false && ctx.dir === "ltr"
     },
     {
       target: "first",
@@ -123,8 +120,7 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     {
       target: "last",
       cond: (ctx: CarouselContext) =>
-        (ctx.infinite === true && isEven(ctx.slidesToScroll)) ||
-        (ctx.infinite === false && ctx.dir === "rtl")
+        ctx.infinite === false && ctx.dir === "rtl"
     },
     {
       target: "first",
