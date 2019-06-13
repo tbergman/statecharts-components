@@ -17,41 +17,51 @@ import { Machine } from "xstate";
 import { changeCursor } from "./updater";
 
 // e.data is the cursor of the group to which we need to transition
-const goTo = [
-  {
-    target: "first",
-    cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
-    actions: [
-      changeCursor(ctx => ({
-        start: ctx.min,
-        end: ctx.min + ctx.slidesToShow - 1
-      }))
-    ]
-  },
-  {
-    target: "last",
-    cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      isCursorValid(e.data, ctx.min, ctx.max) && e.data === ctx.groups.length,
-    actions: [
-      changeCursor(ctx => ({
-        start: ctx.max - ctx.slidesToShow + 1,
-        end: ctx.max
-      }))
-    ]
-  },
-  {
-    target: "middle",
-    cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      isCursorValid(e.data, ctx.min, ctx.max),
-    actions: [
-      changeCursor((ctx, e) => ({
-        start: e.data,
-        end: e.data + ctx.slidesToShow - 1
-      }))
-    ]
-  }
-];
+function goTo({
+  firstGroup,
+  lastGroup
+}: {
+  firstGroup: Group;
+  lastGroup: Group;
+}) {
+  // e.data is group cursor
+  return [
+    {
+      target: "first",
+      cond: (ctx: CarouselContext, e: CarouselEvent) =>
+        isCursorValid(e.data, ctx.min, ctx.max) && e.data === firstGroup.start,
+      actions: [
+        changeCursor(ctx => ({
+          start: firstGroup.start,
+          end: firstGroup.end
+        }))
+      ]
+    },
+    {
+      target: "last",
+      cond: (ctx: CarouselContext, e: CarouselEvent) =>
+        isCursorValid(e.data, ctx.min, ctx.max) && e.data === lastGroup.start,
+      actions: [
+        changeCursor(ctx => ({
+          start: lastGroup.start,
+          end: lastGroup.end
+        }))
+      ]
+    },
+    {
+      target: "middle",
+      cond: (ctx: CarouselContext, e: CarouselEvent) =>
+        isCursorValid(e.data, ctx.min, ctx.max),
+      actions: [
+        changeCursor((ctx, e) => ({
+          start: e.data,
+          // Length of a group
+          end: e.data + ctx.slidesToShow - 1
+        }))
+      ]
+    }
+  ];
+}
 
 interface TernaryConfig extends CarouselMachineFactoryConfig {
   dir: Dir;
@@ -203,7 +213,7 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     on: {
       NEXT: firstNext,
       PREV: firstPrev,
-      GO_TO: goTo
+      GO_TO: goTo({ firstGroup, lastGroup })
     }
   };
 
@@ -296,7 +306,7 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     on: {
       NEXT: lastNext,
       PREV: lastPrev,
-      GO_TO: goTo
+      GO_TO: goTo({ firstGroup, lastGroup })
     }
   };
 
@@ -414,7 +424,7 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     on: {
       NEXT: middleNext,
       PREV: middlePrev,
-      GO_TO: goTo
+      GO_TO: goTo({ firstGroup, lastGroup })
     }
   };
 
