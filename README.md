@@ -6,6 +6,8 @@
 - [x] Autoplay
 - [x] Support for direction
 - [ ] Support for different layouts
+- [ ] Fix the active dot bug when doing next and prev on `{ "totalItems": 2, "startIndex": 1, "dir": "ltr", "infinite": true }`
+- [ ] Add validation for negative,zero and float numbers
 - [ ] Support for touch
 - [ ] Config for dots and buttons
 - [ ] Support for carousel methods (goToSlide, next, prev, ...)

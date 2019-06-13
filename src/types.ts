@@ -9,6 +9,7 @@ export type CarouselContext = {
   dir: Dir;
   infinite: boolean;
   slidesToShow: number;
+  slidesToScroll: number;
   groups: Group[];
 };
 export type CarouselStateSchema = {

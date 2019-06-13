@@ -103,9 +103,6 @@ export function Carousel(props: CarouselProps) {
                   className="item"
                   style={{ width: itemWidth, overflow: "hidden" }}
                   key={item.key || itemIdx}
-                  onClick={() =>
-                    sendEvent({ type: "GO_TO", data: itemIdx + 1 })
-                  }
                 >
                   {React.cloneElement(item, {
                     ...item.props,

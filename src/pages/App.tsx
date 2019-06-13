@@ -11,7 +11,7 @@ function DemoSection({
 }) {
   const { items, ...restConfig } = config;
   return (
-    <div style={{ padding: 15, border: "1px dotted" }}>
+    <div style={{ padding: 15, border: "1px dotted", marginTop: 15 }}>
       <h3>
         <pre style={{ backgroundColor: "#eee", display: "block", padding: 5 }}>
           {JSON.stringify(restConfig, null, 2)}
@@ -24,7 +24,7 @@ function DemoSection({
 
 const carousels: CarouselProps[] = [
   {
-    items: getRange(7).map(i => (
+    items: getRange(2).map(i => (
       <span
         style={{
           height: 100,
@@ -42,11 +42,86 @@ const carousels: CarouselProps[] = [
         {i}
       </span>
     )),
-    totalItems: 1,
+    totalItems: 2,
+    startIndex: 1,
+    slidesToScroll: 2,
+    dir: "rtl",
+    infinite: true
+  },
+  {
+    items: getRange(2).map(i => (
+      <span
+        style={{
+          height: 100,
+          backgroundColor: "orange",
+          color: "black",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: 50,
+          margin: 0,
+          fontFamily: "monospace"
+        }}
+        key={i}
+      >
+        {i}
+      </span>
+    )),
+    totalItems: 2,
+    startIndex: 1,
+    slidesToScroll: 1,
+    dir: "ltr",
+    infinite: true
+  },
+  {
+    items: getRange(2).map(i => (
+      <span
+        style={{
+          height: 100,
+          backgroundColor: "orange",
+          color: "black",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: 50,
+          margin: 0,
+          fontFamily: "monospace"
+        }}
+        key={i}
+      >
+        {i}
+      </span>
+    )),
+    totalItems: 2,
+    startIndex: 1,
+    slidesToScroll: 2,
+    dir: "rtl",
+    infinite: false
+  },
+  {
+    items: getRange(2).map(i => (
+      <span
+        style={{
+          height: 100,
+          backgroundColor: "orange",
+          color: "black",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: 50,
+          margin: 0,
+          fontFamily: "monospace"
+        }}
+        key={i}
+      >
+        {i}
+      </span>
+    )),
+    totalItems: 4,
     startIndex: 1,
     slidesToShow: 2,
     slidesToScroll: 2,
-    dir: "rtl",
+    dir: "ltr",
     infinite: false
   }
 ];
@@ -54,16 +129,13 @@ const carousels: CarouselProps[] = [
 export function App() {
   return (
     <div style={{ margin: 30 }}>
-      {carousels
-        .slice()
-        .reverse()
-        .map((c, i) => {
-          return (
-            <DemoSection config={c} key={i}>
-              <Carousel {...c} />
-            </DemoSection>
-          );
-        })}
+      {carousels.slice().map((c, i) => {
+        return (
+          <DemoSection config={c} key={i}>
+            <Carousel {...c} />
+          </DemoSection>
+        );
+      })}
     </div>
   );
 }

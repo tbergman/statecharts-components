@@ -2591,6 +2591,11 @@ combined-stream@^1.0.6, combined-stream@~1.0.6:
   dependencies:
     delayed-stream "~1.0.0"
 
+combos@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/combos/-/combos-0.2.0.tgz#dc31c5a899b42293d55fe19c064d3e6e207ba4f7"
+  integrity sha1-3DHFqJm0IpPVX+GcBk0+biB7pPc=
+
 comma-separated-tokens@^1.0.0:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/comma-separated-tokens/-/comma-separated-tokens-1.0.6.tgz#3cd3d8adc725ab473843db338bcdfd4a7bb087bf"

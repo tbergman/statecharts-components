@@ -10,7 +10,8 @@ import {
   constructGroups,
   isCursorValid,
   indexInGroup,
-  hasAutoPlay
+  hasAutoPlay,
+  getArrayFirstAndLast
 } from "../utils";
 import { Machine } from "xstate";
 import { changeCursor } from "./updater";
@@ -69,9 +70,9 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
   } = config;
   const groups = constructGroups(totalItems, slidesToShow);
 
-  const firstGroup = groups[0];
-  // TODO: check for invalid cases
-  const lastGroup = groups.slice().pop() as Group;
+  const groupFirstLast = getArrayFirstAndLast(groups);
+  const firstGroup = groupFirstLast.first;
+  const lastGroup = groupFirstLast.last;
 
   let initial: any;
   let initialContext: CarouselContext = {
@@ -115,23 +116,75 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
    */
   const firstNext = [
     {
+      target: "first",
+      cond: (ctx: CarouselContext) =>
+        // LTR & RTL & infinite === true: First -> First , scroll distance is divisable by totalItems
+        (ctx.infinite === true && ctx.slidesToScroll % ctx.max === 0) ||
+        // RTL & infinite === false: First -> First, when infinite is false, no matter what scrollIndex is, carousel will stay in First
+        (ctx.dir === "rtl" && ctx.infinite === false)
+    },
+    {
+      target: "last",
+      cond: (ctx: CarouselContext) =>
+        // LTR & infinite === false: First -> Last, scroll distance is equal to or larger than (totalItems - slidesToShow)
+        (ctx.infinite === false &&
+          ctx.dir === "ltr" &&
+          ctx.slidesToScroll >= ctx.max - ctx.slidesToShow) ||
+        // RTL & LTR & infinite === true: First -> Last , scroll distance is (totalItems - 1) + N*totalItems
+        (ctx.infinite === true &&
+          // Ideally (ctx.slidesToScroll % ctx.max === 0) should be prevented here, but this is prevented in the First -> First section.
+          ctx.slidesToScroll % ctx.max <= ctx.slidesToShow),
+      actions: [
+        changeCursor(ctx => ({
+          start: lastGroup.start,
+          end: lastGroup.end
+        }))
+      ]
+    },
+    {
+      // Any other case besides above ones will go to middle
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
       actions: [
         changeCursor(ctx => ({
           start: ctx.startCursor + ctx.slidesToScroll,
           end: ctx.endCursor + ctx.slidesToScroll
         }))
       ]
+    }
+  ];
+  const firstPrev = [
+    {
+      target: "first",
+      cond: (ctx: CarouselContext) =>
+        // LTR & RTL & infinite === true: First -> First , scroll distance is divisable by totalItems
+        (ctx.infinite === true && ctx.slidesToScroll % ctx.max === 0) ||
+        // RTL & infinite === false: First -> First, when infinite is false, no matter what scrollIndex is, carousel will stay in First
+        (ctx.dir === "ltr" && ctx.infinite === false)
     },
     {
       target: "last",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "rtl" && ctx.infinite === true,
+        // LTR & infinite === false: First -> Last, scroll distance is equal to or larger than (totalItems - 1)
+        (ctx.infinite === false &&
+          ctx.dir === "rtl" &&
+          ctx.slidesToScroll >= ctx.max - ctx.slidesToShow) ||
+        // RTL & LTR & infinite === true: First -> Last , scroll distance is (totalItems - 1) + N*totalItems
+        (ctx.infinite === true &&
+          ctx.slidesToScroll % ctx.max <= ctx.slidesToShow),
       actions: [
         changeCursor(ctx => ({
-          start: ctx.max - ctx.slidesToShow + 1,
-          end: ctx.max
+          start: lastGroup.start,
+          end: lastGroup.end
+        }))
+      ]
+    },
+    {
+      // Any other case besides above ones will go to middle
+      target: "middle",
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.startCursor + ctx.slidesToScroll,
+          end: ctx.endCursor + ctx.slidesToScroll
         }))
       ]
     }
@@ -144,48 +197,79 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     }),
     on: {
       NEXT: firstNext,
-      PREV: [
-        {
-          target: "last",
-          cond: (ctx: CarouselContext) =>
-            ctx.dir === "ltr" && ctx.infinite === true,
-          actions: [
-            changeCursor(ctx => ({
-              start: ctx.max - ctx.slidesToShow + 1,
-              end: ctx.max
-            }))
-          ]
-        },
-        {
-          target: "middle",
-          cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-          actions: [
-            changeCursor(ctx => ({
-              start: ctx.startCursor + ctx.slidesToScroll,
-              end: ctx.endCursor + ctx.slidesToScroll
-            }))
-          ]
-        }
-      ],
+      PREV: firstPrev,
       GO_TO: goTo
     }
   };
 
   const lastNext = [
     {
+      target: "last",
+      cond: (ctx: CarouselContext) =>
+        // LTR & RTL & infinite === true: Last -> Last , scroll distance is divisable by totalItems
+        (ctx.infinite === true && ctx.slidesToScroll % ctx.max === 0) ||
+        // LTR & infinite === false: Last -> Last, when infinite is false, no matter what scrollIndex is, carousel will stay in First
+        (ctx.dir === "ltr" && ctx.infinite === false)
+    },
+    {
       target: "first",
       cond: (ctx: CarouselContext) =>
-        ctx.dir === "ltr" && ctx.infinite === true,
+        // RTL & infinite === false: Last -> First, scroll distance is equal to or larger than (totalItems - 1)
+        (ctx.infinite === false &&
+          ctx.dir === "rtl" &&
+          ctx.slidesToScroll >= ctx.max - ctx.slidesToShow) ||
+        // RTL && RTL & infinite === true: Last -> First , scroll distance is (totalItems - 1) + N*totalItems
+        (ctx.infinite === true &&
+          ctx.dir === "rtl" &&
+          ctx.slidesToScroll % ctx.max <= ctx.slidesToShow),
       actions: [
         changeCursor(ctx => ({
-          start: ctx.min,
-          end: ctx.min + ctx.slidesToShow - 1
+          start: firstGroup.start,
+          end: firstGroup.end
         }))
       ]
     },
     {
+      // Any other case besides above ones will go to middle
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
+      actions: [
+        changeCursor(ctx => ({
+          start: ctx.startCursor - ctx.slidesToScroll,
+          end: ctx.endCursor - ctx.slidesToScroll
+        }))
+      ]
+    }
+  ];
+  const lastPrev = [
+    {
+      target: "last",
+      cond: (ctx: CarouselContext) =>
+        // LTR & RTL & infinite === true: Last -> Last , scroll distance is divisable by totalItems
+        (ctx.infinite === true && ctx.slidesToScroll % ctx.max === 0) ||
+        // LTR & infinite === false: Last -> Last, when infinite is false, no matter what scrollIndex is, carousel will stay in First
+        (ctx.dir === "rtl" && ctx.infinite === false)
+    },
+    {
+      target: "first",
+      cond: (ctx: CarouselContext) =>
+        // RTL & infinite === false: Last -> First, scroll distance is equal to or larger than (totalItems - 1)
+        (ctx.infinite === false &&
+          ctx.dir === "ltr" &&
+          ctx.slidesToScroll >= ctx.max - ctx.slidesToShow) ||
+        // RTL & RTL & infinite === true: Last -> First , scroll distance is (totalItems - 1) + N*totalItems
+        (ctx.infinite === true &&
+          ctx.dir === "ltr" &&
+          ctx.slidesToScroll % ctx.max <= ctx.slidesToShow),
+      actions: [
+        changeCursor(ctx => ({
+          start: firstGroup.start,
+          end: firstGroup.end
+        }))
+      ]
+    },
+    {
+      // Any other case besides above ones will go to middle
+      target: "middle",
       actions: [
         changeCursor(ctx => ({
           start: ctx.startCursor - ctx.slidesToScroll,
@@ -202,34 +286,25 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     }),
     on: {
       NEXT: lastNext,
-      PREV: [
-        {
-          target: "middle",
-          cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-          actions: [
-            changeCursor(ctx => ({
-              start: ctx.startCursor - ctx.slidesToScroll,
-              end: ctx.endCursor - ctx.slidesToScroll
-            }))
-          ]
-        },
-        {
-          target: "first",
-          cond: (ctx: CarouselContext) =>
-            ctx.dir === "rtl" && ctx.infinite === true,
-          actions: [
-            changeCursor(ctx => ({
-              start: ctx.min,
-              end: ctx.min + ctx.slidesToShow - 1
-            }))
-          ]
-        }
-      ],
+      PREV: lastPrev,
       GO_TO: goTo
     }
   };
 
   const middleNext = [
+    {
+      target: "last",
+      cond: (ctx: CarouselContext) =>
+        (ctx.dir === "ltr" &&
+        ctx.infinite === false &&
+        ctx.startCursor + ctx.slidesToScroll >= lastGroup.start) || (ctx.dir === "ltr" && ctx.infinite === true && ) || () || (),
+      actions: [
+        changeCursor(ctx => ({
+          start: lastGroup.start,
+          end: lastGroup.end
+        }))
+      ]
+    },
     // last item in middle
     {
       target: "last",

@@ -20,7 +20,13 @@ export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
     ...defaultConfig,
     ...config
   };
-  const { totalItems, startIndex, autoPlay, slidesToShow } = settings;
+  const {
+    totalItems,
+    startIndex,
+    autoPlay,
+    slidesToShow,
+    slidesToScroll
+  } = settings;
 
   // Validate startIndex to be a number in the range of min and amx
   if (startIndex < 1 || startIndex > totalItems) {
