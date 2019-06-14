@@ -81,8 +81,6 @@ export function Carousel(props: CarouselProps) {
 
   if (!itemWidth) return null;
 
-  // Grouping items based on slidesToShow
-  const chunked = chunk(items, slidesToShow);
   const totalWidth = totalItems * itemWidth;
   const transitionSpan = (state.context.startCursor - 1) * -1 * itemWidth;
 
@@ -96,24 +94,22 @@ export function Carousel(props: CarouselProps) {
             transform: `translate3d(${transitionSpan}px, 0, 0)`
           }}
         >
-          {chunked.map((group, groupIdx) => (
+          {items.map((item, itemIdx) => (
             <div
               className="cf items-group"
-              key={groupIdx}
-              id={`group-${groupIdx}`}
+              key={itemIdx}
+              id={`group-${itemIdx}`}
             >
-              {group.map((item, itemIdx) => (
-                <div
-                  className="item"
-                  style={{ width: itemWidth, overflow: "hidden" }}
-                  key={item.key || itemIdx}
-                >
-                  {React.cloneElement(item, {
-                    ...item.props,
-                    style: { ...item.props.style, maxWidth: "100%" }
-                  })}
-                </div>
-              ))}
+              <div
+                className="item"
+                style={{ width: itemWidth, overflow: "hidden" }}
+                key={item.key || itemIdx}
+              >
+                {React.cloneElement(item, {
+                  ...item.props,
+                  style: { ...item.props.style, maxWidth: "100%" }
+                })}
+              </div>
             </div>
           ))}
         </div>
