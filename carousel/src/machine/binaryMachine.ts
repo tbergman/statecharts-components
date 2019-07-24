@@ -19,15 +19,13 @@ import { Machine } from "xstate";
 const goTo = [
   {
     target: "first",
-    cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
-    actions: [changeCursor(ctx => 1)],
+    cond: "cursorValid&firstGroup",
+    actions: ["setCursorToFirstGroup"],
   },
   {
     target: "last",
-    cond: (ctx: CarouselContext, e: CarouselEvent) =>
-      isCursorValid(e.data, ctx.min, ctx.max) && e.data === 2,
-    actions: [changeCursor(ctx => 2)],
+    cond: "cursorValid&lastGroup",
+    actions: ["setCursorToLastGroup"],
   },
 ];
 
@@ -48,23 +46,21 @@ export function binaryCarouselMachine(config: BinaryConfig) {
   const firstNext = [
     {
       target: "first",
-      cond: (ctx: CarouselContext) =>
-        ctx.infinite === false && ctx.dir === "rtl",
+      cond: "finite&RTL",
     },
     {
       target: "last",
-      actions: [changeCursor(ctx => 2)],
+      actions: ["setCursorToLastGroup"],
     },
   ];
   const firstPrev = [
     {
       target: "first",
-      cond: (ctx: CarouselContext) =>
-        ctx.infinite === false && ctx.dir === "ltr",
+      cond: "finite&LTR",
     },
     {
       target: "last",
-      actions: [changeCursor(ctx => 2)],
+      actions: ["setCursorToLastGroup"],
     },
   ];
   const first = {
@@ -82,23 +78,21 @@ export function binaryCarouselMachine(config: BinaryConfig) {
   const lastNext = [
     {
       target: "last",
-      cond: (ctx: CarouselContext) =>
-        ctx.infinite === false && ctx.dir === "ltr",
+      cond: "finite&LTR",
     },
     {
       target: "first",
-      actions: [changeCursor(ctx => 1)],
+      actions: ["setCursorToFirstGroup"],
     },
   ];
   const lastPrev = [
     {
       target: "last",
-      cond: (ctx: CarouselContext) =>
-        ctx.infinite === false && ctx.dir === "rtl",
+      cond: "finite&RTL",
     },
     {
       target: "first",
-      actions: [changeCursor(ctx => 1)],
+      actions: ["setCursorToFirstGroup"],
     },
   ];
   const last = {
@@ -141,13 +135,33 @@ export function binaryCarouselMachine(config: BinaryConfig) {
       "invalid config on binaryCarouselMachine. startIndex doesn not belong to first and last state.",
     );
   }
-  return Machine<CarouselContext, BinaryCarouselStateSchema, CarouselEvent>({
-    id: "binaryCarousel",
-    initial,
-    context: initialContext,
-    states: {
-      first: first,
-      last: last,
+  return Machine<CarouselContext, BinaryCarouselStateSchema, CarouselEvent>(
+    {
+      id: "binaryCarousel",
+      initial,
+      context: initialContext,
+      states: {
+        first: first,
+        last: last,
+      },
     },
-  });
+    {
+      actions: {
+        setCursorToFirstGroup: changeCursor(() => 1),
+        setCursorToLastGroup: changeCursor(ctx => ctx.groups.length),
+        setCursorToData: changeCursor((ctx, e) => e.data),
+        incrementCursor: changeCursor(ctx => ctx.cursor + 1),
+        decrementCursor: changeCursor(ctx => ctx.cursor - 1),
+      },
+      guards: {
+        "finite&RTL": ctx => ctx.infinite === false && ctx.dir === "rtl",
+        "finite&LTR": ctx => ctx.infinite === false && ctx.dir === "ltr",
+        "cursorValid&firstGroup": (ctx, e) =>
+          isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
+        "cursorValid&lastGroup": (ctx, e) =>
+          isCursorValid(e.data, ctx.min, ctx.max) &&
+          e.data === ctx.groups.length,
+      },
+    },
+  );
 }

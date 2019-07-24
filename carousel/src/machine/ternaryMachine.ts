@@ -17,35 +17,23 @@ import { Machine } from "xstate";
 import { changeCursor } from "./updater";
 
 // e.data is the cursor of the group to which we need to transition
-function goTo({
-  firstGroup,
-  lastGroup,
-}: {
-  firstGroup: Group;
-  lastGroup: Group;
-}) {
-  // e.data is group cursor
-  return [
-    {
-      target: "first",
-      cond: (ctx: CarouselContext, e: CarouselEvent) =>
-        isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
-      actions: [changeCursor(ctx => 1)],
-    },
-    {
-      target: "last",
-      cond: (ctx: CarouselContext, e: CarouselEvent) =>
-        isCursorValid(e.data, ctx.min, ctx.max) && e.data === ctx.groups.length,
-      actions: [changeCursor(ctx => ctx.groups.length)],
-    },
-    {
-      target: "middle",
-      cond: (ctx: CarouselContext, e: CarouselEvent) =>
-        isCursorValid(e.data, ctx.min, ctx.max),
-      actions: [changeCursor((ctx, e) => e.data)],
-    },
-  ];
-}
+const goTo = [
+  {
+    target: "first",
+    cond: "cursorValid&firstGroup",
+    actions: ["setCursorToFirstGroup"],
+  },
+  {
+    target: "last",
+    cond: "cursorValid&lastGroup",
+    actions: ["setCursorToLastGroup"],
+  },
+  {
+    target: "middle",
+    cond: "cursorValid",
+    actions: ["setCursorToData"],
+  },
+];
 
 interface TernaryConfig extends CarouselMachineFactoryConfig {
   dir: Dir;
@@ -66,7 +54,6 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
   const groupFirstLast = getArrayFirstAndLast(groups);
   const firstGroup = groupFirstLast.first;
   const lastGroup = groupFirstLast.last;
-  const lastGroupIndex = groups.length;
 
   let initial: any;
   let initialContext: CarouselContext = {
@@ -106,47 +93,35 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
   const firstNext = [
     {
       target: "first",
-      cond: (ctx: CarouselContext) =>
-        // Hit deadend from the beginning
-        ctx.infinite === false && ctx.dir === "rtl",
-      actions: [changeCursor(ctx => 1)],
+      cond: "finite&RTL",
+      actions: ["setCursorToFirstGroup"],
     },
     {
       target: "last",
-      cond: (ctx: CarouselContext) =>
-        // Hit deadend from the end when start is at least at lastGroup's start
-        (ctx.dir === "ltr" && ctx.cursor + 1 == lastGroupIndex) ||
-        (ctx.dir === "rtl" && ctx.infinite === true),
-      actions: [changeCursor(ctx => lastGroupIndex)],
+      cond: "LTR&beforeLast||RTL&infinite",
+      actions: ["setCursorToLastGroup"],
     },
     {
-      // Any other case besides above ones will go to middle
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [changeCursor(ctx => ctx.cursor + 1)],
+      cond: "LTR",
+      actions: ["incrementCursor"],
     },
   ];
   const firstPrev = [
     {
       target: "first",
-      cond: (ctx: CarouselContext) =>
-        // deadend from the beginning
-        ctx.infinite === false && ctx.dir === "ltr",
-      actions: [changeCursor(ctx => 1)],
+      cond: "finite&LTR",
+      actions: ["setCursorToFirstGroup"],
     },
     {
       target: "last",
-      cond: (ctx: CarouselContext) =>
-        // Hit deadend from the end when start is at least at lastGroup's start
-        (ctx.dir === "rtl" && ctx.cursor + 1 == lastGroupIndex) ||
-        (ctx.infinite === true && ctx.dir === "ltr"),
-      actions: [changeCursor(ctx => lastGroupIndex)],
+      cond: "RTL&beforeLast||infinite&LTR",
+      actions: ["setCursorToLastGroup"],
     },
     {
-      // Any other case besides above ones will go to middle
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-      actions: [changeCursor(ctx => ctx.cursor + 1)],
+      cond: "RTL",
+      actions: ["incrementCursor"],
     },
   ];
   const first = {
@@ -158,54 +133,42 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     on: {
       NEXT: firstNext,
       PREV: firstPrev,
-      GO_TO: goTo({ firstGroup, lastGroup }),
+      GO_TO: goTo,
     },
   };
 
   const lastNext = [
     {
       target: "last",
-      cond: (ctx: CarouselContext) =>
-        // Hit deadend from the beginning
-        ctx.infinite === false && ctx.dir === "ltr",
-      actions: [changeCursor(ctx => lastGroupIndex)],
+      cond: "finite&LTR",
+      actions: ["setCursorToLastGroup"],
     },
     {
       target: "first",
-      cond: (ctx: CarouselContext) =>
-        // Hit deadend from the end when start is at least at lastGroup's start
-        (ctx.dir === "rtl" && ctx.cursor + 1 == 1) ||
-        (ctx.infinite === true && ctx.dir === "ltr"),
-      actions: [changeCursor(ctx => 1)],
+      cond: "RTL&beforeFirst||infinite&LTR",
+      actions: ["setCursorToFirstGroup"],
     },
     {
-      // Any other case besides above ones will go to middle
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-      actions: [changeCursor(ctx => ctx.cursor - 1)],
+      cond: "RTL",
+      actions: ["decrementCursor"],
     },
   ];
   const lastPrev = [
     {
       target: "last",
-      cond: (ctx: CarouselContext) =>
-        // deadend from the beginning
-        ctx.infinite === false && ctx.dir === "rtl",
-      actions: [changeCursor(ctx => lastGroupIndex)],
+      cond: "finite&RTL",
+      actions: ["setCursorToLastGroup"],
     },
     {
       target: "first",
-      cond: (ctx: CarouselContext) =>
-        // Hit deadend from the end when start is at least at lastGroup's start
-        (ctx.dir === "ltr" && ctx.cursor - 1 == 1) ||
-        (ctx.dir === "rtl" && ctx.infinite === true),
-      actions: [changeCursor(ctx => 1)],
+      cond: "LTR&beforeFirst||RTL&infinite",
+      actions: ["setCursorToFirstGroup"],
     },
     {
-      // Any other case besides above ones will go to middle
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [changeCursor(ctx => ctx.cursor - 1)],
+      cond: "LTR",
+      actions: ["decrementCursor"],
     },
   ];
   const last = {
@@ -217,61 +180,58 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     on: {
       NEXT: lastNext,
       PREV: lastPrev,
-      GO_TO: goTo({ firstGroup, lastGroup }),
+      GO_TO: goTo,
     },
   };
 
   const middleNext = [
     {
       target: "first",
-      cond: (ctx: CarouselContext) => ctx.dir === "rtl" && ctx.cursor - 1 == 1,
-      actions: [changeCursor(ctx => 1)],
+      cond: "RTL&beforeFirst",
+      actions: ["setCursorToFirstGroup"],
     },
     {
       target: "last",
-      cond: (ctx: CarouselContext) =>
-        ctx.dir === "ltr" && ctx.cursor + 1 == lastGroupIndex,
-      actions: [changeCursor(ctx => lastGroupIndex)],
+      cond: "LTR&beforeLast",
+      actions: ["setCursorToLastGroup"],
     },
     // Middle -> Middle on LTR
     {
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [changeCursor(ctx => ctx.cursor + 1)],
+      cond: "LTR",
+      actions: ["incrementCursor"],
     },
     // Middle -> Middle on RTL
     {
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-      actions: [changeCursor(ctx => ctx.cursor - 1)],
+      cond: "RTL",
+      actions: ["decrementCursor"],
     },
   ];
   const middlePrev = [
     {
       target: "first",
-      cond: (ctx: CarouselContext) => ctx.dir === "ltr" && ctx.cursor - 1 == 1,
-      actions: [changeCursor(ctx => 1)],
+      cond: "LTR&beforeFirst",
+      actions: ["setCursorToFirstGroup"],
     },
     {
       target: "last",
-      cond: (ctx: CarouselContext) =>
-        ctx.dir === "rtl" && ctx.cursor + 1 == lastGroupIndex,
-      actions: [changeCursor(ctx => lastGroupIndex)],
+      cond: "RTL&beforeLast",
+      actions: ["setCursorToLastGroup"],
     },
     // Middle -> Middle on RTL
     {
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "rtl",
-      actions: [changeCursor(ctx => ctx.cursor + 1)],
+      cond: "RTL",
+      actions: ["incrementCursor"],
     },
     // Middle -> Middle on LTR
     {
       target: "middle",
-      cond: (ctx: CarouselContext) => ctx.dir === "ltr",
-      actions: [changeCursor(ctx => ctx.cursor - 1)],
+      cond: "LTR",
+      actions: ["decrementCursor"],
     },
   ];
-  // for middle, both NEXT and PREV can result in same situations depending on item position and dir
   const middle = {
     ...(hasAutoPlay(config) && {
       after: {
@@ -281,18 +241,59 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     on: {
       NEXT: middleNext,
       PREV: middlePrev,
-      GO_TO: goTo({ firstGroup, lastGroup }),
+      GO_TO: goTo,
     },
   };
 
-  return Machine<CarouselContext, CarouselStateSchema, CarouselEvent>({
-    id: "ternaryCarousel",
-    initial,
-    context: initialContext,
-    states: {
-      first,
-      middle,
-      last,
+  return Machine<CarouselContext, CarouselStateSchema, CarouselEvent>(
+    {
+      id: "ternaryCarousel",
+      initial,
+      context: initialContext,
+      states: {
+        first,
+        middle,
+        last,
+      },
     },
-  });
+    {
+      actions: {
+        setCursorToFirstGroup: changeCursor(() => 1),
+        setCursorToLastGroup: changeCursor(ctx => ctx.groups.length),
+        setCursorToData: changeCursor((ctx, e) => e.data),
+        incrementCursor: changeCursor(ctx => ctx.cursor + 1),
+        decrementCursor: changeCursor(ctx => ctx.cursor - 1),
+      },
+      guards: {
+        "finite&RTL": ctx => ctx.infinite === false && ctx.dir === "rtl",
+        "LTR&beforeLast||RTL&infinite": ctx =>
+          (ctx.dir === "ltr" && ctx.cursor + 1 == ctx.groups.length) ||
+          (ctx.dir === "rtl" && ctx.infinite === true),
+        LTR: ctx => ctx.dir === "ltr",
+        "finite&LTR": ctx => ctx.infinite === false && ctx.dir === "ltr",
+        "RTL&beforeLast||infinite&LTR": ctx =>
+          (ctx.dir === "rtl" && ctx.cursor + 1 == ctx.groups.length) ||
+          (ctx.infinite === true && ctx.dir === "ltr"),
+        RTL: ctx => ctx.dir === "rtl",
+        "RTL&beforeFirst||infinite&LTR": ctx =>
+          (ctx.dir === "rtl" && ctx.cursor + 1 == 1) ||
+          (ctx.infinite === true && ctx.dir === "ltr"),
+        "LTR&beforeFirst||RTL&infinite": ctx =>
+          (ctx.dir === "ltr" && ctx.cursor - 1 == 1) ||
+          (ctx.dir === "rtl" && ctx.infinite === true),
+        "RTL&beforeFirst": ctx => ctx.dir === "rtl" && ctx.cursor - 1 == 1,
+        "LTR&beforeLast": ctx =>
+          ctx.dir === "ltr" && ctx.cursor + 1 == ctx.groups.length,
+        "LTR&beforeFirst": ctx => ctx.dir === "ltr" && ctx.cursor - 1 == 1,
+        "RTL&beforeLast": ctx =>
+          ctx.dir === "rtl" && ctx.cursor + 1 == ctx.groups.length,
+        "cursorValid&firstGroup": (ctx, e) =>
+          isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
+        "cursorValid&lastGroup": (ctx, e) =>
+          isCursorValid(e.data, ctx.min, ctx.max) &&
+          e.data === ctx.groups.length,
+        cursorValid: (ctx, e) => isCursorValid(e.data, ctx.min, ctx.max),
+      },
+    },
+  );
 }
