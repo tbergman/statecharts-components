@@ -4,6 +4,7 @@ import { carouselMachineFactory } from "./machine/factory";
 import { Dir, CarouselContext } from "./types";
 import "./Carousel.css";
 import { defaultConfig } from "./machine/config";
+import { getCarouselType } from "./utils";
 
 function Dots({
   dots,
@@ -51,6 +52,7 @@ export type CarouselProps = {
 export function Carousel(props: CarouselProps) {
   const settings = { ...defaultConfig, ...props };
   const { items, totalItems, slidesToShow } = settings;
+  const type = getCarouselType(totalItems, slidesToShow);
   const machine = carouselMachineFactory(settings);
   const [state, sendEvent, service] = useMachine(machine);
   const { dir, cursor, groups } = state.context as CarouselContext;
@@ -110,21 +112,27 @@ export function Carousel(props: CarouselProps) {
           ))}
         </div>
       </div>
-      <button
-        onClick={() => {
-          sendEvent({ type: "NEXT" });
-        }}
-      >
-        Next
-      </button>
-      <button
-        onClick={() => {
-          sendEvent({ type: "PREV" });
-        }}
-      >
-        Prev
-      </button>
-      <Dots dots={groups} onDotClick={sendEvent} activeIndex={cursor - 1} />
+      {type !== "Unary" && (
+        <button
+          onClick={() => {
+            sendEvent({ type: "NEXT" });
+          }}
+        >
+          Next
+        </button>
+      )}
+      {type !== "Unary" && (
+        <button
+          onClick={() => {
+            sendEvent({ type: "PREV" });
+          }}
+        >
+          Prev
+        </button>
+      )}
+      {type !== "Unary" && (
+        <Dots dots={groups} onDotClick={sendEvent} activeIndex={cursor - 1} />
+      )}
     </div>
   );
 }
