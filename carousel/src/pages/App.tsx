@@ -5,9 +5,13 @@ import "./App.css";
 import { CarouselMachineFactoryConfig } from "../machine/factory";
 
 function buildTitle(setting: CarouselMachineFactoryConfig) {
-  return `${getCarouselType(setting.totalItems, setting.slidesToShow)}-${
+  let title = `${getCarouselType(setting.totalItems, setting.slidesToShow)}-${
     setting.dir
   }-${setting.infinite ? "♾" : "finite"}`;
+  if (setting.autoPlay !== undefined) {
+    title += `-autoPlay:${setting.autoPlay}`;
+  }
+  return title;
 }
 
 const configs: CarouselMachineFactoryConfig[] = [
@@ -31,6 +35,166 @@ const configs: CarouselMachineFactoryConfig[] = [
     dir: "ltr",
     infinite: true,
     startIndex: 1,
+  },
+  {
+    totalItems: 10,
+    slidesToShow: 5,
+    dir: "ltr",
+    infinite: false,
+    startIndex: 1,
+  },
+  {
+    totalItems: 5,
+    slidesToShow: 4,
+    dir: "ltr",
+    infinite: false,
+    startIndex: 1,
+  },
+  {
+    totalItems: 4,
+    slidesToShow: 4,
+    dir: "ltr",
+    infinite: false,
+    startIndex: 1,
+  },
+  {
+    totalItems: 10,
+    slidesToShow: 5,
+    dir: "rtl",
+    infinite: true,
+    startIndex: 1,
+  },
+  {
+    totalItems: 5,
+    slidesToShow: 4,
+    dir: "rtl",
+    infinite: true,
+    startIndex: 1,
+  },
+  {
+    totalItems: 4,
+    slidesToShow: 4,
+    dir: "rtl",
+    infinite: true,
+    startIndex: 1,
+  },
+  {
+    totalItems: 10,
+    slidesToShow: 5,
+    dir: "rtl",
+    infinite: false,
+    startIndex: 1,
+  },
+  {
+    totalItems: 5,
+    slidesToShow: 4,
+    dir: "rtl",
+    infinite: false,
+    startIndex: 1,
+  },
+  {
+    totalItems: 4,
+    slidesToShow: 4,
+    dir: "rtl",
+    infinite: false,
+    startIndex: 1,
+  },
+  // Auto Play
+  {
+    totalItems: 10,
+    slidesToShow: 5,
+    dir: "ltr",
+    infinite: true,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 5,
+    slidesToShow: 4,
+    dir: "ltr",
+    infinite: true,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 4,
+    slidesToShow: 4,
+    dir: "ltr",
+    infinite: true,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 10,
+    slidesToShow: 5,
+    dir: "ltr",
+    infinite: false,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 5,
+    slidesToShow: 4,
+    dir: "ltr",
+    infinite: false,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 4,
+    slidesToShow: 4,
+    dir: "ltr",
+    infinite: false,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 10,
+    slidesToShow: 5,
+    dir: "rtl",
+    infinite: true,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 5,
+    slidesToShow: 4,
+    dir: "rtl",
+    infinite: true,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 4,
+    slidesToShow: 4,
+    dir: "rtl",
+    infinite: true,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 10,
+    slidesToShow: 5,
+    dir: "rtl",
+    infinite: false,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 5,
+    slidesToShow: 4,
+    dir: "rtl",
+    infinite: false,
+    startIndex: 1,
+    autoPlay: 2000,
+  },
+  {
+    totalItems: 4,
+    slidesToShow: 4,
+    dir: "rtl",
+    infinite: false,
+    startIndex: 1,
+    autoPlay: 2000,
   },
 ];
 
