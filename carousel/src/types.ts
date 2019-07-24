@@ -18,6 +18,12 @@ export type CarouselStateSchema = {
     last: {};
   };
 };
+export type CarouselStateSchemaWithAutoplay = {
+  states: {
+    playing: CarouselStateSchema;
+    paused: CarouselStateSchema;
+  };
+};
 export type UnaryCarouselStateSchema = {
   states: {
     running: {};
@@ -27,6 +33,12 @@ export type BinaryCarouselStateSchema = {
   states: {
     first: {};
     last: {};
+  };
+};
+export type BinaryCarouselStateSchemaWithAutoplay = {
+  states: {
+    playing: BinaryCarouselStateSchema;
+    paused: BinaryCarouselStateSchema;
   };
 };
 

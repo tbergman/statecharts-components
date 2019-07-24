@@ -5,15 +5,15 @@ import {
   isCursorValid,
   indexInGroup,
   constructGroups,
-  isEven,
 } from "../utils";
 import {
   CarouselContext,
   CarouselEvent,
   BinaryCarouselStateSchema,
   Dir,
+  BinaryCarouselStateSchemaWithAutoplay,
 } from "../types";
-import { Machine } from "xstate";
+import { Machine, MachineOptions } from "xstate";
 
 // e.data is the cursor of the group to which we need to transition
 const goTo = [
@@ -35,14 +35,7 @@ interface BinaryConfig extends CarouselMachineFactoryConfig {
   slidesToShow: number;
 }
 export function binaryCarouselMachine(config: BinaryConfig) {
-  const {
-    totalItems,
-    startIndex,
-    slidesToShow,
-    infinite,
-    autoPlay,
-    dir,
-  } = config;
+  const { totalItems, startIndex, slidesToShow, infinite, dir } = config;
   const firstNext = [
     {
       target: "first",
@@ -64,11 +57,6 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     },
   ];
   const first = {
-    ...(hasAutoPlay(config) && {
-      after: {
-        [autoPlay as number]: firstNext,
-      },
-    }),
     on: {
       NEXT: firstNext,
       PREV: firstPrev,
@@ -96,11 +84,6 @@ export function binaryCarouselMachine(config: BinaryConfig) {
     },
   ];
   const last = {
-    ...(hasAutoPlay(config) && {
-      after: {
-        [autoPlay as number]: lastNext,
-      },
-    }),
     on: {
       NEXT: lastNext,
       PREV: lastPrev,
@@ -135,6 +118,83 @@ export function binaryCarouselMachine(config: BinaryConfig) {
       "invalid config on binaryCarouselMachine. startIndex doesn not belong to first and last state.",
     );
   }
+
+  // Implementationd details
+  const machineImplementation: Partial<
+    MachineOptions<CarouselContext, CarouselEvent>
+  > = {
+    actions: {
+      setCursorToFirstGroup: changeCursor(() => 1),
+      setCursorToLastGroup: changeCursor(ctx => ctx.groups.length),
+      setCursorToData: changeCursor((ctx, e) => e.data),
+      incrementCursor: changeCursor(ctx => ctx.cursor + 1),
+      decrementCursor: changeCursor(ctx => ctx.cursor - 1),
+    },
+    guards: {
+      "finite&RTL": ctx => ctx.infinite === false && ctx.dir === "rtl",
+      "finite&LTR": ctx => ctx.infinite === false && ctx.dir === "ltr",
+      "cursorValid&firstGroup": (ctx, e) =>
+        isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
+      "cursorValid&lastGroup": (ctx, e) =>
+        isCursorValid(e.data, ctx.min, ctx.max) && e.data === ctx.groups.length,
+    },
+  };
+
+  // With AutoPlay
+  if (hasAutoPlay(config)) {
+    const autoPlay = config.autoPlay as number;
+    return Machine<
+      CarouselContext,
+      BinaryCarouselStateSchemaWithAutoplay,
+      CarouselEvent
+    >(
+      {
+        id: "binaryCarouselWithAutoPlay",
+        initial: "playing",
+        context: initialContext,
+        states: {
+          playing: {
+            initial,
+            states: {
+              first: {
+                ...first,
+                id: "playing_first",
+                on: { ...first.on, PAUSE: "#paused_first" },
+                after: {
+                  [autoPlay]: firstNext,
+                },
+              },
+              last: {
+                ...last,
+                id: "playing_last",
+                on: { ...last.on, PAUSE: "#paused_last" },
+                after: {
+                  [autoPlay]: lastNext,
+                },
+              },
+            },
+          },
+          paused: {
+            initial,
+            states: {
+              first: {
+                ...first,
+                id: "paused_first",
+                on: { ...first.on, PLAY: "#playing_first" },
+              },
+              last: {
+                ...last,
+                id: "paused_last",
+                on: { ...last.on, PLAY: "#playing_last" },
+              },
+            },
+          },
+        },
+      },
+      machineImplementation,
+    );
+  }
+
   return Machine<CarouselContext, BinaryCarouselStateSchema, CarouselEvent>(
     {
       id: "binaryCarousel",
@@ -145,23 +205,6 @@ export function binaryCarouselMachine(config: BinaryConfig) {
         last: last,
       },
     },
-    {
-      actions: {
-        setCursorToFirstGroup: changeCursor(() => 1),
-        setCursorToLastGroup: changeCursor(ctx => ctx.groups.length),
-        setCursorToData: changeCursor((ctx, e) => e.data),
-        incrementCursor: changeCursor(ctx => ctx.cursor + 1),
-        decrementCursor: changeCursor(ctx => ctx.cursor - 1),
-      },
-      guards: {
-        "finite&RTL": ctx => ctx.infinite === false && ctx.dir === "rtl",
-        "finite&LTR": ctx => ctx.infinite === false && ctx.dir === "ltr",
-        "cursorValid&firstGroup": (ctx, e) =>
-          isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
-        "cursorValid&lastGroup": (ctx, e) =>
-          isCursorValid(e.data, ctx.min, ctx.max) &&
-          e.data === ctx.groups.length,
-      },
-    },
+    machineImplementation,
   );
 }

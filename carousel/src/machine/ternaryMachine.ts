@@ -4,7 +4,7 @@ import {
   CarouselContext,
   CarouselStateSchema,
   CarouselEvent,
-  Group,
+  CarouselStateSchemaWithAutoplay,
 } from "../types";
 import {
   constructGroups,
@@ -13,7 +13,7 @@ import {
   hasAutoPlay,
   getArrayFirstAndLast,
 } from "../utils";
-import { Machine } from "xstate";
+import { Machine, MachineOptions } from "xstate";
 import { changeCursor } from "./updater";
 
 // e.data is the cursor of the group to which we need to transition
@@ -245,6 +245,115 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     },
   };
 
+  const machineImplementation: Partial<
+    MachineOptions<CarouselContext, CarouselEvent>
+  > = {
+    actions: {
+      setCursorToFirstGroup: changeCursor(() => 1),
+      setCursorToLastGroup: changeCursor(ctx => ctx.groups.length),
+      setCursorToData: changeCursor((ctx, e) => e.data),
+      incrementCursor: changeCursor(ctx => ctx.cursor + 1),
+      decrementCursor: changeCursor(ctx => ctx.cursor - 1),
+    },
+    guards: {
+      "finite&RTL": ctx => ctx.infinite === false && ctx.dir === "rtl",
+      "LTR&beforeLast||RTL&infinite": ctx =>
+        (ctx.dir === "ltr" && ctx.cursor + 1 == ctx.groups.length) ||
+        (ctx.dir === "rtl" && ctx.infinite === true),
+      LTR: ctx => ctx.dir === "ltr",
+      "finite&LTR": ctx => ctx.infinite === false && ctx.dir === "ltr",
+      "RTL&beforeLast||infinite&LTR": ctx =>
+        (ctx.dir === "rtl" && ctx.cursor + 1 == ctx.groups.length) ||
+        (ctx.infinite === true && ctx.dir === "ltr"),
+      RTL: ctx => ctx.dir === "rtl",
+      "RTL&beforeFirst||infinite&LTR": ctx =>
+        (ctx.dir === "rtl" && ctx.cursor + 1 == 1) ||
+        (ctx.infinite === true && ctx.dir === "ltr"),
+      "LTR&beforeFirst||RTL&infinite": ctx =>
+        (ctx.dir === "ltr" && ctx.cursor - 1 == 1) ||
+        (ctx.dir === "rtl" && ctx.infinite === true),
+      "RTL&beforeFirst": ctx => ctx.dir === "rtl" && ctx.cursor - 1 == 1,
+      "LTR&beforeLast": ctx =>
+        ctx.dir === "ltr" && ctx.cursor + 1 == ctx.groups.length,
+      "LTR&beforeFirst": ctx => ctx.dir === "ltr" && ctx.cursor - 1 == 1,
+      "RTL&beforeLast": ctx =>
+        ctx.dir === "rtl" && ctx.cursor + 1 == ctx.groups.length,
+      "cursorValid&firstGroup": (ctx, e) =>
+        isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
+      "cursorValid&lastGroup": (ctx, e) =>
+        isCursorValid(e.data, ctx.min, ctx.max) && e.data === ctx.groups.length,
+      cursorValid: (ctx, e) => isCursorValid(e.data, ctx.min, ctx.max),
+    },
+  };
+
+  // With AutoPlay
+  if (hasAutoPlay(config)) {
+    const autoPlay = config.autoPlay as number;
+    return Machine<
+      CarouselContext,
+      CarouselStateSchemaWithAutoplay,
+      CarouselEvent
+    >(
+      {
+        id: "ternaryCarouselWithAutoPlay",
+        initial: "playing",
+        context: initialContext,
+        states: {
+          playing: {
+            initial,
+            states: {
+              first: {
+                ...first,
+                id: "playing_first",
+                on: { ...first.on, PAUSE: "#paused_first" },
+                after: {
+                  [autoPlay]: firstNext,
+                },
+              },
+              middle: {
+                ...middle,
+                id: "playing_middle",
+                on: { ...middle.on, PAUSE: "#paused_middle" },
+                after: {
+                  [autoPlay]: middleNext,
+                },
+              },
+              last: {
+                ...last,
+                id: "playing_last",
+                on: { ...last.on, PAUSE: "#paused_last" },
+                after: {
+                  [autoPlay]: lastNext,
+                },
+              },
+            },
+          },
+          paused: {
+            initial,
+            states: {
+              first: {
+                ...first,
+                id: "paused_first",
+                on: { ...first.on, PLAY: "#playing_first" },
+              },
+              middle: {
+                ...middle,
+                id: "paused_middle",
+                on: { ...middle.on, PLAY: "#playing_middle" },
+              },
+              last: {
+                ...last,
+                id: "paused_last",
+                on: { ...last.on, PLAY: "#playing_last" },
+              },
+            },
+          },
+        },
+      },
+      machineImplementation,
+    );
+  }
+
   return Machine<CarouselContext, CarouselStateSchema, CarouselEvent>(
     {
       id: "ternaryCarousel",
@@ -256,44 +365,6 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
         last,
       },
     },
-    {
-      actions: {
-        setCursorToFirstGroup: changeCursor(() => 1),
-        setCursorToLastGroup: changeCursor(ctx => ctx.groups.length),
-        setCursorToData: changeCursor((ctx, e) => e.data),
-        incrementCursor: changeCursor(ctx => ctx.cursor + 1),
-        decrementCursor: changeCursor(ctx => ctx.cursor - 1),
-      },
-      guards: {
-        "finite&RTL": ctx => ctx.infinite === false && ctx.dir === "rtl",
-        "LTR&beforeLast||RTL&infinite": ctx =>
-          (ctx.dir === "ltr" && ctx.cursor + 1 == ctx.groups.length) ||
-          (ctx.dir === "rtl" && ctx.infinite === true),
-        LTR: ctx => ctx.dir === "ltr",
-        "finite&LTR": ctx => ctx.infinite === false && ctx.dir === "ltr",
-        "RTL&beforeLast||infinite&LTR": ctx =>
-          (ctx.dir === "rtl" && ctx.cursor + 1 == ctx.groups.length) ||
-          (ctx.infinite === true && ctx.dir === "ltr"),
-        RTL: ctx => ctx.dir === "rtl",
-        "RTL&beforeFirst||infinite&LTR": ctx =>
-          (ctx.dir === "rtl" && ctx.cursor + 1 == 1) ||
-          (ctx.infinite === true && ctx.dir === "ltr"),
-        "LTR&beforeFirst||RTL&infinite": ctx =>
-          (ctx.dir === "ltr" && ctx.cursor - 1 == 1) ||
-          (ctx.dir === "rtl" && ctx.infinite === true),
-        "RTL&beforeFirst": ctx => ctx.dir === "rtl" && ctx.cursor - 1 == 1,
-        "LTR&beforeLast": ctx =>
-          ctx.dir === "ltr" && ctx.cursor + 1 == ctx.groups.length,
-        "LTR&beforeFirst": ctx => ctx.dir === "ltr" && ctx.cursor - 1 == 1,
-        "RTL&beforeLast": ctx =>
-          ctx.dir === "rtl" && ctx.cursor + 1 == ctx.groups.length,
-        "cursorValid&firstGroup": (ctx, e) =>
-          isCursorValid(e.data, ctx.min, ctx.max) && e.data === 1,
-        "cursorValid&lastGroup": (ctx, e) =>
-          isCursorValid(e.data, ctx.min, ctx.max) &&
-          e.data === ctx.groups.length,
-        cursorValid: (ctx, e) => isCursorValid(e.data, ctx.min, ctx.max),
-      },
-    },
+    machineImplementation,
   );
 }
