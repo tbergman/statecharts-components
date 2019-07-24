@@ -4,7 +4,7 @@ import { carouselMachineFactory } from "./machine/factory";
 import { Dir, CarouselContext } from "./types";
 import "./Carousel.css";
 import { defaultConfig } from "./machine/config";
-import { getCarouselType } from "./utils";
+import { getCarouselType, hasAutoPlay } from "./utils";
 
 function Dots({
   dots,
@@ -51,31 +51,29 @@ export type CarouselProps = {
 
 export function Carousel(props: CarouselProps) {
   const settings = { ...defaultConfig, ...props };
-  const { items, totalItems, slidesToShow } = settings;
+  const { items, totalItems, slidesToShow, autoPlay } = settings;
   const type = getCarouselType(totalItems, slidesToShow);
   const machine = carouselMachineFactory(settings);
   const [state, sendEvent, service] = useMachine(machine);
-  const { dir, cursor, groups } = state.context as CarouselContext;
+  const { cursor, groups } = state.context as CarouselContext;
 
   // Calculate each item's width based on slidesToSHow
   const [itemWidth, setItemWidth] = React.useState(1);
   const listRef = React.useRef<HTMLDivElement>(null!);
 
-  React.useEffect(() => {
-    service.onTransition(state => {
-      if (state.changed) {
-        console.log(state.value);
-        // console.log(state.nextEvents);
-        console.log(state.context);
-      }
-    });
-  }, [service]);
+  // React.useEffect(() => {
+  //   service.onTransition(state => {
+  //     if (state.changed) {
+  //       console.log(state.value);
+  //       // console.log(state.nextEvents);
+  //       console.log(state.context);
+  //     }
+  //   });
+  // }, [service]);
 
   React.useLayoutEffect(() => {
     setItemWidth(listRef.current.clientWidth / (slidesToShow as number));
   }, []);
-
-  console.log(groups);
 
   if (!itemWidth) return null;
 
@@ -130,6 +128,28 @@ export function Carousel(props: CarouselProps) {
           Prev
         </button>
       )}
+      {hasAutoPlay(settings) &&
+        typeof state.value === "object" &&
+        !!state.value.playing && (
+          <button
+            onClick={() => {
+              sendEvent({ type: "PAUSE" });
+            }}
+          >
+            PAUSE
+          </button>
+        )}
+      {hasAutoPlay(settings) &&
+        typeof state.value === "object" &&
+        !!state.value.paused && (
+          <button
+            onClick={() => {
+              sendEvent({ type: "PLAY" });
+            }}
+          >
+            PLAY
+          </button>
+        )}
       {type !== "Unary" && (
         <Dots dots={groups} onDotClick={sendEvent} activeIndex={cursor - 1} />
       )}
