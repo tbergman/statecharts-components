@@ -46,8 +46,22 @@ export function RailCarousel(props: CarouselProps) {
   const [itemWidth, setItemWidth] = React.useState(1);
   const listRef = React.useRef<HTMLDivElement>(null!);
 
-  React.useLayoutEffect(() => {
+  function updateLayout() {
+    console.debug("updating layout");
     setItemWidth(listRef.current.clientWidth / slidesToShow);
+  }
+
+  React.useLayoutEffect(() => {
+    updateLayout();
+
+    if (settings.responsive) {
+      window.addEventListener("resize", updateLayout);
+    }
+
+    return () => {
+      console.debug("removing resize listener");
+      window.removeEventListener("resize", updateLayout);
+    };
   }, []);
 
   if (!itemWidth) return null;

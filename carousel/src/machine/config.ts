@@ -5,4 +5,5 @@ export const defaultConfig = {
   infinite: false,
   slidesToShow: 1,
   startIndex: 1,
+  responsive: true,
 };
