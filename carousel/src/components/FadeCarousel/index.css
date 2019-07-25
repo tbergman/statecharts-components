@@ -1,0 +1,47 @@
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+.items-list {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  display: block;
+}
+
+.items-group {
+  height: 100%;
+  min-height: 1px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  opacity: 0;
+  visibility: hidden;
+  display: flex;
+  position: absolute;
+}
+.items-group.items-group-active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 500ms ease 0s, visibility 500ms ease 0s;
+  position: relative;
+}
+
+.cf:before,
+.cf:after {
+  display: table;
+  content: " ";
+  zoom: 1;
+}
+.cf:after {
+  clear: both;
+}
+
+.item {
+  height: 100%;
+  min-height: 1px;
+  flex-basis: 0;
+  flex-grow: 1;
+}
