@@ -44,6 +44,16 @@ export type BinaryCarouselStateSchemaWithAutoplay = {
 
 export type CarouselEvent = EventObject;
 
+export type CarouselProps = {
+  items: JSX.Element[];
+  totalItems: number;
+  startIndex?: number;
+  autoPlay?: number;
+  dir?: Dir;
+  infinite?: boolean;
+  slidesToShow?: number;
+};
+
 export type Dir = "ltr" | "rtl";
 
 export type CarouselStateNodeConfig = StateNodeConfig<

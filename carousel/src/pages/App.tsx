@@ -1,5 +1,5 @@
 import React from "react";
-import { Carousel, CarouselProps } from "../Carousel";
+import { RailCarousel } from "../components/RailCarousel";
 import { getRange, getCarouselType } from "../utils";
 import "./App.css";
 import { CarouselMachineFactoryConfig } from "../machine/factory";
@@ -100,102 +100,102 @@ const configs: CarouselMachineFactoryConfig[] = [
     startIndex: 1,
   },
   // Auto Play
-  {
-    totalItems: 10,
-    slidesToShow: 5,
-    dir: "ltr",
-    infinite: true,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 5,
-    slidesToShow: 4,
-    dir: "ltr",
-    infinite: true,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 4,
-    slidesToShow: 4,
-    dir: "ltr",
-    infinite: true,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 10,
-    slidesToShow: 5,
-    dir: "ltr",
-    infinite: false,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 5,
-    slidesToShow: 4,
-    dir: "ltr",
-    infinite: false,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 4,
-    slidesToShow: 4,
-    dir: "ltr",
-    infinite: false,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 10,
-    slidesToShow: 5,
-    dir: "rtl",
-    infinite: true,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 5,
-    slidesToShow: 4,
-    dir: "rtl",
-    infinite: true,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 4,
-    slidesToShow: 4,
-    dir: "rtl",
-    infinite: true,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 10,
-    slidesToShow: 5,
-    dir: "rtl",
-    infinite: false,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 5,
-    slidesToShow: 4,
-    dir: "rtl",
-    infinite: false,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
-  {
-    totalItems: 4,
-    slidesToShow: 4,
-    dir: "rtl",
-    infinite: false,
-    startIndex: 1,
-    autoPlay: 2000,
-  },
+  // {
+  //   totalItems: 10,
+  //   slidesToShow: 5,
+  //   dir: "ltr",
+  //   infinite: true,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 5,
+  //   slidesToShow: 4,
+  //   dir: "ltr",
+  //   infinite: true,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 4,
+  //   slidesToShow: 4,
+  //   dir: "ltr",
+  //   infinite: true,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 10,
+  //   slidesToShow: 5,
+  //   dir: "ltr",
+  //   infinite: false,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 5,
+  //   slidesToShow: 4,
+  //   dir: "ltr",
+  //   infinite: false,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 4,
+  //   slidesToShow: 4,
+  //   dir: "ltr",
+  //   infinite: false,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 10,
+  //   slidesToShow: 5,
+  //   dir: "rtl",
+  //   infinite: true,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 5,
+  //   slidesToShow: 4,
+  //   dir: "rtl",
+  //   infinite: true,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 4,
+  //   slidesToShow: 4,
+  //   dir: "rtl",
+  //   infinite: true,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 10,
+  //   slidesToShow: 5,
+  //   dir: "rtl",
+  //   infinite: false,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 5,
+  //   slidesToShow: 4,
+  //   dir: "rtl",
+  //   infinite: false,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
+  // {
+  //   totalItems: 4,
+  //   slidesToShow: 4,
+  //   dir: "rtl",
+  //   infinite: false,
+  //   startIndex: 1,
+  //   autoPlay: 2000,
+  // },
 ];
 
 type Setting = CarouselMachineFactoryConfig & { title: string };
@@ -229,7 +229,7 @@ export function App() {
               <strong>{s.title}</strong>
             </em>
           </code>
-          <Carousel
+          <RailCarousel
             {...s}
             items={getRange(s.totalItems).map(p => (
               <p
