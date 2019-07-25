@@ -72,4 +72,4 @@ export type CarouselStateNodeConfig = StateNodeConfig<
   CarouselEvent
 >;
 
-export type Group = { start: number; end: number };
+export type Group = number[];

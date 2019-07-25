@@ -1,18 +1,19 @@
 import { Group, CarouselType, HeadlessCarouselProps } from "./types";
 
 export function getRange(length: number) {
-  const result: number[] = [];
-  for (let i = 0; i < length; i++) {
-    result.push(i + 1);
+  return makeNumeralSequence(0, length - 1);
+}
+
+export function makeNumeralSequence(start: number, end: number) {
+  let sequence = [];
+  for (let i = start; i <= end; i++) {
+    sequence.push(i);
   }
-  return result;
+  return sequence;
 }
 
 /**
  * An array of all possible groups
- * @example
- * // constructGroups(5, 3);
- * // [{start: 1, end: 4}, {start: 2, end: 5}, {start: 3, end: 6}]
  */
 
 export function constructGroups({
@@ -30,39 +31,25 @@ export function constructGroups({
     switch (type) {
       case "Unary":
         // we don't need to rotate a single element array
-        return [
-          {
-            start: 1,
-            end: totalItems,
-          },
-        ];
+        return [makeNumeralSequence(1, totalItems)];
       case "Binary":
-        return rotateArrayLeft<Group>(
+        return rotateArrayLeft(
           [
-            {
-              start: 1,
-              end: slidesToShow,
-            },
-            {
-              start: 2,
-              end: totalItems,
-            },
+            makeNumeralSequence(1, slidesToShow),
+            makeNumeralSequence(2, totalItems),
           ],
           startIndex - 1,
         );
       case "Ternary":
       default:
-        let groups: Group[] = [];
+        let groups = [];
 
         for (let i = slidesToShow; i <= totalItems; i++) {
-          groups.push({
-            start: i - slidesToShow + 1,
-            end: i,
-          });
+          groups.push(makeNumeralSequence(i - slidesToShow + 1, i));
         }
 
         // Since startIndex starts from 1, ...
-        return rotateArrayLeft<Group>(groups, startIndex - 1);
+        return rotateArrayLeft(groups, startIndex - 1);
     }
   } catch (err) {
     throw err;
@@ -76,7 +63,7 @@ function rotateArrayLeft<T>(array: T[], offset: number): T[] {
 }
 
 export function indexInGroup(index: number, group: Group) {
-  return index <= group.end && index >= group.start;
+  return group.includes(index);
 }
 
 // Machine will have transitions if the groups are more than 1
