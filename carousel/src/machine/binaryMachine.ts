@@ -1,4 +1,3 @@
-import { CarouselMachineFactoryConfig } from "./factory";
 import { changeCursor } from "./updater";
 import {
   hasAutoPlay,
@@ -10,8 +9,8 @@ import {
   CarouselContext,
   CarouselEvent,
   BinaryCarouselStateSchema,
-  Dir,
   BinaryCarouselStateSchemaWithAutoplay,
+  HeadlessCarouselProps,
 } from "../types";
 import { Machine, MachineOptions } from "xstate";
 
@@ -29,12 +28,7 @@ const goTo = [
   },
 ];
 
-interface BinaryConfig extends CarouselMachineFactoryConfig {
-  dir: Dir;
-  infinite: boolean;
-  slidesToShow: number;
-}
-export function binaryCarouselMachine(config: BinaryConfig) {
+export function binaryCarouselMachine(config: HeadlessCarouselProps) {
   const { totalItems, startIndex, slidesToShow, infinite, dir } = config;
   const firstNext = [
     {

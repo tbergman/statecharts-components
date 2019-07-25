@@ -2,9 +2,9 @@ import React from "react";
 import { RailCarousel } from "../components/RailCarousel";
 import { getRange, getCarouselType } from "../utils";
 import "./App.css";
-import { CarouselMachineFactoryConfig } from "../machine/factory";
+import { HeadlessCarouselProps } from "../types";
 
-function buildTitle(setting: CarouselMachineFactoryConfig) {
+function buildTitle(setting: HeadlessCarouselProps) {
   let title = `${getCarouselType(setting.totalItems, setting.slidesToShow)}-${
     setting.dir
   }-${setting.infinite ? "♾" : "finite"}`;
@@ -14,7 +14,7 @@ function buildTitle(setting: CarouselMachineFactoryConfig) {
   return title;
 }
 
-const configs: CarouselMachineFactoryConfig[] = [
+const configs: HeadlessCarouselProps[] = [
   {
     totalItems: 10,
     slidesToShow: 5,
@@ -198,7 +198,7 @@ const configs: CarouselMachineFactoryConfig[] = [
   // },
 ];
 
-type Setting = CarouselMachineFactoryConfig & { title: string };
+type Setting = HeadlessCarouselProps & { title: string };
 const settings: Setting[] = configs.map(cfg => ({
   ...cfg,
   title: buildTitle(cfg),

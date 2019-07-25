@@ -1,5 +1,4 @@
-import { Group, CarouselType } from "./types";
-import { CarouselMachineFactoryConfig } from "./machine/factory";
+import { Group, CarouselType, HeadlessCarouselProps } from "./types";
 
 export function getRange(length: number) {
   const result: number[] = [];
@@ -81,7 +80,7 @@ export function indexInGroup(index: number, group: Group) {
 }
 
 // Machine will have transitions if the groups are more than 1
-export function hasTransition(config: CarouselMachineFactoryConfig) {
+export function hasTransition(config: HeadlessCarouselProps) {
   return (
     constructGroups({
       totalItems: config.totalItems,
@@ -92,7 +91,7 @@ export function hasTransition(config: CarouselMachineFactoryConfig) {
 }
 
 export function isAutoPlayValidNumber(
-  autoPlay: CarouselMachineFactoryConfig["autoPlay"],
+  autoPlay: HeadlessCarouselProps["autoPlay"],
 ) {
   return (
     autoPlay !== undefined &&
@@ -103,7 +102,7 @@ export function isAutoPlayValidNumber(
 }
 
 // indicate whether we should include autoPlay in machine definition or not
-export function hasAutoPlay(config: CarouselMachineFactoryConfig) {
+export function hasAutoPlay(config: HeadlessCarouselProps) {
   return (
     config.autoPlay !== undefined &&
     isAutoPlayValidNumber(config.autoPlay) &&

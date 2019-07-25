@@ -1,20 +1,11 @@
-import { Dir } from "../types";
+import { HeadlessCarouselProps } from "../types";
 import { constructGroups, isAutoPlayValidNumber } from "../utils";
 import { defaultConfig } from "./config";
 import { binaryCarouselMachine } from "./binaryMachine";
 import { unaryCarouselMachine } from "./unaryMachine";
 import { ternaryCarouselMachine } from "./ternaryMachine";
 
-export interface CarouselMachineFactoryConfig {
-  totalItems: number;
-  startIndex: number;
-  autoPlay?: number;
-  dir: Dir;
-  infinite: boolean;
-  slidesToShow: number;
-}
-
-export function carouselMachineFactory(config: CarouselMachineFactoryConfig) {
+export function carouselMachineFactory(config: HeadlessCarouselProps) {
   const settings = {
     ...defaultConfig,
     ...config,

@@ -1,19 +1,14 @@
 import {
-  Dir,
   CarouselContext,
   UnaryCarouselStateSchema,
   CarouselEvent,
+  HeadlessCarouselProps,
 } from "../types";
-import { CarouselMachineFactoryConfig } from "./factory";
+
 import { Machine } from "xstate";
 import { constructGroups } from "../utils";
 
-interface UnaryConfig extends CarouselMachineFactoryConfig {
-  dir: Dir;
-  infinite: boolean;
-  slidesToShow: number;
-}
-export function unaryCarouselMachine(config: UnaryConfig) {
+export function unaryCarouselMachine(config: HeadlessCarouselProps) {
   const { startIndex, slidesToShow, totalItems, dir, infinite } = config;
   const groups = constructGroups({ totalItems, slidesToShow, startIndex });
   return Machine<CarouselContext, UnaryCarouselStateSchema, CarouselEvent>({

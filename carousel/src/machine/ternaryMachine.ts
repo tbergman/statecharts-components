@@ -1,10 +1,9 @@
-import { CarouselMachineFactoryConfig } from "./factory";
 import {
-  Dir,
   CarouselContext,
   CarouselStateSchema,
   CarouselEvent,
   CarouselStateSchemaWithAutoplay,
+  HeadlessCarouselProps,
 } from "../types";
 import {
   constructGroups,
@@ -35,12 +34,7 @@ const goTo = [
   },
 ];
 
-interface TernaryConfig extends CarouselMachineFactoryConfig {
-  dir: Dir;
-  infinite: boolean;
-  slidesToShow: number;
-}
-export function ternaryCarouselMachine(config: TernaryConfig) {
+export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
   const {
     startIndex,
     slidesToShow,
@@ -125,11 +119,6 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     },
   ];
   const first = {
-    ...(hasAutoPlay(config) && {
-      after: {
-        [autoPlay as number]: firstNext,
-      },
-    }),
     on: {
       NEXT: firstNext,
       PREV: firstPrev,
@@ -172,11 +161,6 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     },
   ];
   const last = {
-    ...(hasAutoPlay(config) && {
-      after: {
-        [autoPlay as number]: lastNext,
-      },
-    }),
     on: {
       NEXT: lastNext,
       PREV: lastPrev,
@@ -233,11 +217,6 @@ export function ternaryCarouselMachine(config: TernaryConfig) {
     },
   ];
   const middle = {
-    ...(hasAutoPlay(config) && {
-      after: {
-        [autoPlay as number]: middleNext,
-      },
-    }),
     on: {
       NEXT: middleNext,
       PREV: middlePrev,
