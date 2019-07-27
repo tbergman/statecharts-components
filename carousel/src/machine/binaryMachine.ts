@@ -102,7 +102,7 @@ export function binaryCarouselMachine(config: HeadlessCarouselProps) {
       cursor: 1,
     };
   } else if (indexInGroup(startIndex, groups[1])) {
-    initial = "lsat";
+    initial = "last";
     initialContext = {
       ...initialContext,
       cursor: 2,
