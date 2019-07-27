@@ -3,6 +3,7 @@ import { RailCarousel } from "../components/RailCarousel";
 import { getRange, getCarouselType } from "../utils";
 import "./App.css";
 import { HeadlessCarouselProps } from "../types";
+import { FadeCarousel } from "../components/FadeCarousel";
 
 function buildTitle(setting: HeadlessCarouselProps) {
   let title = `${getCarouselType(setting.totalItems, setting.slidesToShow)}-${
@@ -17,185 +18,18 @@ function buildTitle(setting: HeadlessCarouselProps) {
 const configs: HeadlessCarouselProps[] = [
   {
     totalItems: 10,
-    slidesToShow: 5,
+    slidesToShow: 2,
     dir: "ltr",
     infinite: true,
-    startIndex: 1,
+    startIndex: 10,
   },
   {
     totalItems: 5,
     slidesToShow: 4,
     dir: "ltr",
     infinite: true,
-    startIndex: 1,
+    startIndex: 5,
   },
-  {
-    totalItems: 4,
-    slidesToShow: 4,
-    dir: "ltr",
-    infinite: true,
-    startIndex: 1,
-  },
-  {
-    totalItems: 10,
-    slidesToShow: 5,
-    dir: "ltr",
-    infinite: false,
-    startIndex: 1,
-  },
-  {
-    totalItems: 5,
-    slidesToShow: 4,
-    dir: "ltr",
-    infinite: false,
-    startIndex: 1,
-  },
-  {
-    totalItems: 4,
-    slidesToShow: 4,
-    dir: "ltr",
-    infinite: false,
-    startIndex: 1,
-  },
-  {
-    totalItems: 10,
-    slidesToShow: 5,
-    dir: "rtl",
-    infinite: true,
-    startIndex: 1,
-  },
-  {
-    totalItems: 5,
-    slidesToShow: 4,
-    dir: "rtl",
-    infinite: true,
-    startIndex: 1,
-  },
-  {
-    totalItems: 4,
-    slidesToShow: 4,
-    dir: "rtl",
-    infinite: true,
-    startIndex: 1,
-  },
-  {
-    totalItems: 10,
-    slidesToShow: 5,
-    dir: "rtl",
-    infinite: false,
-    startIndex: 1,
-  },
-  {
-    totalItems: 5,
-    slidesToShow: 4,
-    dir: "rtl",
-    infinite: false,
-    startIndex: 1,
-  },
-  {
-    totalItems: 4,
-    slidesToShow: 4,
-    dir: "rtl",
-    infinite: false,
-    startIndex: 1,
-  },
-  // Auto Play
-  // {
-  //   totalItems: 10,
-  //   slidesToShow: 5,
-  //   dir: "ltr",
-  //   infinite: true,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 5,
-  //   slidesToShow: 4,
-  //   dir: "ltr",
-  //   infinite: true,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 4,
-  //   slidesToShow: 4,
-  //   dir: "ltr",
-  //   infinite: true,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 10,
-  //   slidesToShow: 5,
-  //   dir: "ltr",
-  //   infinite: false,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 5,
-  //   slidesToShow: 4,
-  //   dir: "ltr",
-  //   infinite: false,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 4,
-  //   slidesToShow: 4,
-  //   dir: "ltr",
-  //   infinite: false,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 10,
-  //   slidesToShow: 5,
-  //   dir: "rtl",
-  //   infinite: true,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 5,
-  //   slidesToShow: 4,
-  //   dir: "rtl",
-  //   infinite: true,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 4,
-  //   slidesToShow: 4,
-  //   dir: "rtl",
-  //   infinite: true,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 10,
-  //   slidesToShow: 5,
-  //   dir: "rtl",
-  //   infinite: false,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 5,
-  //   slidesToShow: 4,
-  //   dir: "rtl",
-  //   infinite: false,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
-  // {
-  //   totalItems: 4,
-  //   slidesToShow: 4,
-  //   dir: "rtl",
-  //   infinite: false,
-  //   startIndex: 1,
-  //   autoPlay: 2000,
-  // },
 ];
 
 type Setting = HeadlessCarouselProps & { title: string };
@@ -251,6 +85,21 @@ export function App() {
           />
         </React.Fragment>
       ))}
+      <Code content={{ totalItem: 6, slidesToShow: 1, infinite: true }} />
+      <FadeCarousel
+        totalItems={6}
+        slidesToShow={1}
+        infinite={true}
+        items={getRange(6).map(p => (
+          <img
+            src={`https://picsum.photos/640/640?random=1&${Math.random()}`}
+            style={{
+              display: "block",
+              margin: "0 auto",
+            }}
+          />
+        ))}
+      />
     </div>
   );
 }
