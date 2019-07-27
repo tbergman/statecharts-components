@@ -15,7 +15,7 @@ function Dots({
   activeIndex: number;
 }) {
   return (
-    <div style={{ textAlign: "center" }}>
+    <div className="dots">
       {dots.map((_, i) => (
         <div
           key={i}
@@ -71,7 +71,7 @@ export function RailCarousel(props: CarouselProps) {
   return (
     <HeadlessCarousel {...settings}>
       {headlessCarousel => (
-        <div>
+        <div className="rail-carousel">
           <div className="items-list" ref={listRef}>
             <div
               className="items-track cf"
@@ -83,11 +83,7 @@ export function RailCarousel(props: CarouselProps) {
               }}
             >
               {items.map((item, itemIdx) => (
-                <div
-                  className="cf items-group"
-                  key={itemIdx}
-                  id={`group-${itemIdx}`}
-                >
+                <div className="cf items-group" key={itemIdx}>
                   <div
                     className="item"
                     style={{ width: itemWidth, overflow: "hidden" }}
@@ -104,21 +100,19 @@ export function RailCarousel(props: CarouselProps) {
           </div>
           {headlessCarousel.type !== "Unary" && (
             <button
+              className="next"
               onClick={() => {
                 headlessCarousel.next();
               }}
-            >
-              Next
-            </button>
+            />
           )}
           {headlessCarousel.type !== "Unary" && (
             <button
+              className="prev"
               onClick={() => {
                 headlessCarousel.prev();
               }}
-            >
-              Prev
-            </button>
+            />
           )}
           {hasAutoPlay(settings) &&
             typeof headlessCarousel.state === "object" &&

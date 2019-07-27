@@ -1,10 +1,31 @@
-*,
-*:before,
-*:after {
-  box-sizing: border-box;
+.rail-carousel {
+  position: relative;
 }
 
-.items-list {
+.rail-carousel .next,
+.rail-carousel .prev {
+  position: absolute;
+  top: 50%;
+  background-color: transparent;
+  width: 20px;
+  height: 20px;
+  transform: rotate(45deg);
+  border: solid #000;
+  margin-top: -10px;
+  padding: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+.rail-carousel .prev {
+  left: 10px;
+  border-width: 0 0 5px 5px;
+}
+.rail-carousel .next {
+  right: 10px;
+  border-width: 5px 5px 0 0;
+}
+
+.rail-carousel .items-list {
   overflow: hidden;
   margin: 0;
   padding: 0;
@@ -14,7 +35,7 @@
 
 /* Translate happens on this element */
 /* This element has the long width of total items */
-.items-track {
+.rail-carousel .items-track {
   position: relative;
   top: 0;
   left: 0;
@@ -24,24 +45,18 @@
   transition: transform 350ms ease;
 }
 
-.items-group {
+.rail-carousel .items-group {
+  height: 100%;
+  min-height: 1px;
+  float: left;
+}
+
+.rail-carousel .item {
   float: left;
   height: 100%;
   min-height: 1px;
 }
 
-.cf:before,
-.cf:after {
-  display: table;
-  content: " ";
-  zoom: 1;
-}
-.cf:after {
-  clear: both;
-}
-
-.item {
-  float: left;
-  height: 100%;
-  min-height: 1px;
+.rail-carousel .dots {
+  text-align: center;
 }

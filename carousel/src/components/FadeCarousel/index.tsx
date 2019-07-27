@@ -46,7 +46,7 @@ export function FadeCarousel(props: CarouselProps) {
     <HeadlessCarousel {...settings}>
       {headlessCarousel => {
         return (
-          <div>
+          <div className="fade-carousel">
             <div className="items-list">
               {headlessCarousel.data.groups.map((group, groupIdx) => (
                 <div
