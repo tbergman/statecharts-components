@@ -71,7 +71,8 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
     initial = "last";
     initialContext = {
       ...initialContext,
-      cursor: totalItems,
+      // This is to avoid empty rendering in the view layer
+      cursor: lastGroup[0],
     };
   } else {
     initial = "middle";
