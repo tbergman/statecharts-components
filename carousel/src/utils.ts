@@ -1,7 +1,7 @@
 import { Group, CarouselType, HeadlessCarouselProps } from "./types";
 
 export function getRange(length: number) {
-  return makeNumeralSequence(0, length - 1);
+  return makeNumeralSequence(1, length);
 }
 
 export function makeNumeralSequence(start: number, end: number) {
