@@ -1,119 +1,241 @@
-import {
-  hasAutoPlay,
-  isCursorValid,
-  indexInGroup,
-  constructGroups,
-} from "../utils";
+import { indexInGroup, constructGroups } from "../utils";
 import {
   CarouselEvent,
-  BinaryCarouselStateSchema,
   HeadlessCarouselProps,
-  BinaryContext,
+  TernaryContext,
+  TernaryCarouselStateSchema,
 } from "../types";
 import { Machine, assign } from "xstate";
+import {
+  isCursorValid,
+  isCursorOnFirstItem,
+  isCursorOnMiddleItems,
+  isCursorOnLastItem,
+  isRtl,
+  isInfinite,
+  isCursorOnLastMiddleItem,
+  isCursorOnFirstMiddleItem,
+} from "./guards";
+import { sendNextOnAutoplay, setCursor } from "./actions";
+import { cancel } from "xstate/lib/actions";
 
 export function binaryCarouselMachine(config: HeadlessCarouselProps) {
-  const { totalItems, startIndex, slidesToShow } = config;
+  const {
+    totalItems,
+    startIndex,
+    slidesToShow,
+    infinite,
+    dir,
+    autoPlay,
+  } = config;
   const groups = constructGroups({ totalItems, slidesToShow, startIndex });
 
-  let initialContext: BinaryContext;
+  let initialContext: TernaryContext;
   initialContext = {
     cursor: startIndex,
     groups,
+    infinite,
+    dir,
+    autoPlay,
   };
 
-  if (indexInGroup(startIndex, groups[0])) {
-    initialContext = {
-      ...initialContext,
-      cursor: 1,
-    };
-  } else if (indexInGroup(startIndex, groups[1])) {
-    initialContext = {
-      ...initialContext,
-      cursor: 2,
-    };
-  } else {
-    throw Error(
-      "invalid config on binaryCarouselMachine. startIndex is invalid",
-    );
-  }
-
   const machine = Machine<
-    BinaryContext,
-    BinaryCarouselStateSchema,
+    TernaryContext,
+    TernaryCarouselStateSchema,
     CarouselEvent
   >(
     {
       id: "binaryCarousel",
-      initial: "waiting",
+      initial: "playing",
       context: initialContext,
       states: {
-        waiting: {
-          initial: "tmp",
-          states: {
-            tmp: {
-              on: {
-                "": [
-                  {
-                    target: "first",
-                    cond: ctx => ctx.cursor === 1,
-                  },
-                  {
-                    target: "last",
-                    cond: ctx => ctx.cursor === 2,
-                  },
-                ],
-              },
-            },
-            first: {
-              ...(hasAutoPlay(config) && {
-                after: {
-                  AUTOPLAY: "#binaryCarousel.transitioning",
-                },
-              }),
-              on: {
-                NEXT: "#binaryCarousel.transitioning",
-                PREV: "#binaryCarousel.transitioning",
-                GO_TO: {
-                  target: "#binaryCarousel.transitioning",
-                  cond: "cursorValid",
-                },
-              },
-            },
-            last: {
-              ...(hasAutoPlay(config) && {
-                after: {
-                  AUTOPLAY: "#binaryCarousel.transitioning",
-                },
-              }),
-              on: {
-                NEXT: "#binaryCarousel.transitioning",
-                PREV: "#binaryCarousel.transitioning",
-                GO_TO: {
-                  target: "#binaryCarousel.transitioning",
-                  cond: "cursorValid",
-                },
-              },
-            },
+        paused: {
+          id: "paused",
+          on: {
+            PLAY: "#binaryCarousel.playing",
           },
         },
-        transitioning: {
-          onEntry: assign<BinaryContext>({
-            cursor: (ctx, e) => e.data || (ctx.cursor == 1 ? 2 : 1),
-          }),
-          after: {
-            TRANSITION_DELAY: "#binaryCarousel.waiting.tmp",
+        playing: {
+          initial: "waiting",
+          id: "playing",
+          states: {
+            waiting: {
+              initial: "tmp",
+              // Autoplay
+              entry: sendNextOnAutoplay(config),
+              exit: cancel("sendAutoPlay"),
+              // /Autoplay
+              on: {
+                PAUSE: "#binaryCarousel.paused",
+                GO_TO: {
+                  target: "#transitioning",
+                  cond: "cursorValid",
+                  actions: "setCursorOnGoTo",
+                },
+              },
+              states: {
+                tmp: {
+                  on: {
+                    "": [
+                      {
+                        target: "first",
+                        cond: ctx => isCursorOnFirstItem(ctx),
+                      },
+                      {
+                        target: "middle",
+                        cond: ctx => isCursorOnMiddleItems(ctx),
+                      },
+                      {
+                        target: "last",
+                        cond: ctx => isCursorOnLastItem(ctx),
+                      },
+                    ],
+                  },
+                },
+                first: {
+                  on: {
+                    NEXT: [
+                      {
+                        target: "first",
+                        cond: ctx => !isInfinite(ctx) && isRtl(ctx),
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx => isInfinite(ctx) && isRtl(ctx),
+                        actions: "setCursorToLast",
+                      },
+                      {
+                        target: "#transitioning",
+                        actions: "setCursorToFirstMiddleItem",
+                      },
+                    ],
+                    PREV: [
+                      {
+                        target: "first",
+                        cond: ctx => !isInfinite(ctx) && !isRtl(ctx),
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx => isInfinite(ctx) && !isRtl(ctx),
+                        actions: "setCursorToLast",
+                      },
+                      {
+                        target: "#transitioning",
+                        actions: "setCursorToFirstMiddleItem",
+                      },
+                    ],
+                  },
+                },
+                middle: {
+                  on: {
+                    NEXT: [
+                      {
+                        target: "#transitioning",
+                        cond: ctx =>
+                          isCursorOnLastMiddleItem(ctx) && !isRtl(ctx),
+                        actions: "setCursorToLast",
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx =>
+                          isCursorOnFirstMiddleItem(ctx) && isRtl(ctx),
+                        actions: "setCursorToFirst",
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx => !isRtl(ctx),
+                        actions: "incrementCursor",
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx => isRtl(ctx),
+                        actions: "decrementCursor",
+                      },
+                    ],
+                    PREV: [
+                      {
+                        target: "#transitioning",
+                        cond: ctx =>
+                          isCursorOnLastMiddleItem(ctx) && isRtl(ctx),
+                        actions: "setCursorToLast",
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx =>
+                          isCursorOnFirstMiddleItem(ctx) && !isRtl(ctx),
+                        actions: "setCursorToFirst",
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx => !isRtl(ctx),
+                        actions: "decrementCursor",
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx => isRtl(ctx),
+                        actions: "incrementCursor",
+                      },
+                    ],
+                  },
+                },
+                last: {
+                  on: {
+                    NEXT: [
+                      {
+                        target: "last",
+                        cond: ctx => !isInfinite(ctx) && !isRtl(ctx),
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx => isInfinite(ctx) && !isRtl(ctx),
+                        actions: "setCursorToFirst",
+                      },
+                      {
+                        target: "#transitioning",
+                        actions: "setCursorToLastMiddleItem",
+                      },
+                    ],
+                    PREV: [
+                      {
+                        target: "last",
+                        cond: ctx => !isInfinite(ctx) && isRtl(ctx),
+                      },
+                      {
+                        target: "#transitioning",
+                        cond: ctx => isInfinite(ctx) && isRtl(ctx),
+                        actions: "setCursorToFirst",
+                      },
+                      {
+                        target: "#transitioning",
+                        actions: "setCursorToLastMiddleItem",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            transitioning: {
+              id: "transitioning",
+              after: {
+                TRANSITION_DELAY: "#playing",
+              },
+            },
           },
         },
       },
     },
     {
-      delays: {
-        ...(hasAutoPlay(config) && { AUTOPLAY: config.autoPlay as number }),
-        TRANSITION_DELAY: 350,
+      actions: {
+        setCursorToFirst: setCursor(1),
+        setCursorToLast: setCursor(ctx => ctx.groups.length),
+        setCursorOnGoTo: setCursor((_, e) => e.data),
+        setCursorToFirstMiddleItem: setCursor(2),
+        setCursorToLastMiddleItem: setCursor(ctx => ctx.groups.length - 1),
+        incrementCursor: setCursor(ctx => ctx.cursor + 1),
+        decrementCursor: setCursor(ctx => ctx.cursor - 1),
       },
       guards: {
-        cursorValid: (_, e) => isCursorValid(e.data, 1, 2),
+        cursorValid: isCursorValid,
       },
     },
   );

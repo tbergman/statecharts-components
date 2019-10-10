@@ -97,12 +97,14 @@ export function hasAutoPlay(config: HeadlessCarouselProps) {
   );
 }
 
-export function isCursorValid(
-  nextCursor: number | undefined,
-  min: number,
-  max: number,
-) {
-  return nextCursor !== undefined && nextCursor <= max && nextCursor >= min;
+export function isInteger(number: unknown) {
+  const isValidNumber =
+    typeof number === "number" && !isNaN(number) && isFinite(number);
+  return !isValidNumber
+    ? false
+    : !!Number.isInteger
+    ? Number.isInteger(number as number)
+    : Math.floor(number as number) === number;
 }
 
 export function isNumber(num: number) {
@@ -139,3 +141,5 @@ export function getCarouselType(
     throw Error("invalid carousel type");
   }
 }
+
+export function noop() {}

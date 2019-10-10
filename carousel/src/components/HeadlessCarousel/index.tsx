@@ -1,13 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { useMachine } from "@xstate/react";
 import { carouselMachineFactory } from "../../machine/factory";
-import { CarouselContext, CarouselType, CarouselProps, Dir } from "../../types";
+import {
+  CarouselType,
+  CarouselEvent,
+  TernaryContext,
+  HeadlessCarouselProps,
+} from "../../types";
 import { getCarouselType } from "../../utils";
 import { StateValue } from "xstate";
 
-type ChildrenProps = {
+type ChildrenProps<T> = {
   state: StateValue;
-  data: CarouselContext;
+  data: T;
   next: () => void;
   prev: () => void;
   goTo: (index: number) => void;
@@ -16,32 +21,50 @@ type ChildrenProps = {
   type: CarouselType;
   //   onTransition?: (state: State<CarouselContext, CarouselEvent>) => void;
 };
-type HeadlessCarouselProps = CarouselProps & {
-  startIndex: number;
-  slidesToShow: number;
-  infinite: boolean;
-  dir: Dir;
-};
 
-export function HeadlessCarousel(
+export function HeadlessCarousel<TContext>(
   props: HeadlessCarouselProps & {
-    children: (childProps: ChildrenProps) => JSX.Element;
+    children: (childProps: ChildrenProps<TernaryContext>) => JSX.Element;
   },
 ) {
   const { totalItems, slidesToShow } = props;
   const type = getCarouselType(totalItems, slidesToShow);
-  const machine = carouselMachineFactory(props);
-  const [state, sendEvent] = useMachine(machine);
+  const [state, sendEvent, service] = useMachine<any, CarouselEvent>(
+    carouselMachineFactory(props).withConfig({
+      delays: {
+        ...(props.autoPlay && { AUTOPLAY: props.autoPlay }),
+        TRANSITION_DELAY: props.transitionDelay || 350,
+      },
+    }),
+  );
 
-  //   React.useEffect(() => {
-  //     service.onTransition(state => {
-  //       if (state.changed) {
-  //         console.log(state.value);
-  //         // console.log(state.nextEvents);
-  //         console.log(state.context);
-  //       }
-  //     });
-  //   }, [service]);
+  function isDelayedEvent(type: string) {
+    return type.includes("xstate.after");
+  }
+
+  React.useEffect(() => {
+    service.onEvent(evt => {
+      console.log(
+        `${(JSON.stringify(service.state.value)
+          .split(":")
+          .pop() as string).replace(/}/g, "")} , ${(JSON.stringify(state.value)
+          .split(":")
+          .pop() as string).replace(/}/g, "")}, ${
+          !isDelayedEvent(evt.type)
+            ? evt.type
+            : (evt.type.match(/\(.+\)/) as RegExpMatchArray)[0]
+        }`,
+      );
+    });
+    service.onTransition(state => {
+      if (state.changed) {
+        // console.log(state.value);
+        // console.log(state.nextEvents);
+        // console.log(state.context);
+        // console.log(state.value);
+      }
+    });
+  }, []);
 
   return props.children({
     state: state.value,

@@ -36,13 +36,13 @@ export function carouselMachineFactory(config: HeadlessCarouselProps) {
   const groups = constructGroups({ totalItems, slidesToShow, startIndex });
 
   switch (groups.length) {
-    // unary carousel
+    // carousel has 1 item to show
     case 1:
-      return unaryCarouselMachine(settings);
-    // binary carousel
+      return unaryCarouselMachine();
+    // carousel has 2 items to show
     case 2:
       return binaryCarouselMachine(settings);
-    // carousel has >1 item
+    // carousel has more than 2 items to show
     default:
       return ternaryCarouselMachine(settings);
   }

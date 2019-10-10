@@ -42,7 +42,7 @@
   display: block;
   margin-left: auto;
   margin-right: auto;
-  transition: transform 350ms ease;
+  transition: transform var(--transition-delay) ease;
 }
 
 .rail-carousel .items-group {

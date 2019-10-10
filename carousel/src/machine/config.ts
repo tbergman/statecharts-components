@@ -6,4 +6,5 @@ export const defaultConfig = {
   slidesToShow: 1,
   startIndex: 1,
   responsive: true,
+  transitionDelay: 350,
 };

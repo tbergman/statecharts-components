@@ -1,9 +1,9 @@
 import React from "react";
-import { RailCarousel } from "../components/RailCarousel";
-import { getRange, getCarouselType } from "../utils";
+import { RailCarousel } from "./components/RailCarousel";
+import { getRange, getCarouselType } from "./utils";
 import "./App.css";
-import { HeadlessCarouselProps } from "../types";
-import { FadeCarousel } from "../components/FadeCarousel";
+import { HeadlessCarouselProps } from "./types";
+import { FadeCarousel } from "./components/FadeCarousel";
 
 function buildTitle(setting: HeadlessCarouselProps) {
   let title = `${getCarouselType(setting.totalItems, setting.slidesToShow)}-${
@@ -15,22 +15,26 @@ function buildTitle(setting: HeadlessCarouselProps) {
   return title;
 }
 
-const configs: HeadlessCarouselProps[] = [
+const carousels: HeadlessCarouselProps[] = [
   {
-    totalItems: 10,
+    totalItems: 4,
     slidesToShow: 2,
     dir: "ltr",
     infinite: true,
-    startIndex: 10,
+    startIndex: 2,
+    // autoPlay: 2000,
   },
   {
-    totalItems: 5,
-    slidesToShow: 4,
+    totalItems: 4,
+    slidesToShow: 3,
     dir: "ltr",
     infinite: true,
-    startIndex: 5,
+    startIndex: 2,
+    // autoPlay: 1500,
   },
 ];
+
+const configs: HeadlessCarouselProps[] = carousels;
 
 type Setting = HeadlessCarouselProps & { title: string };
 const settings: Setting[] = configs.map(cfg => ({
@@ -85,7 +89,7 @@ export function App() {
           />
         </React.Fragment>
       ))}
-      <Code content={{ totalItem: 6, slidesToShow: 1, infinite: true }} />
+      {/* <Code content={{ totalItem: 6, slidesToShow: 1, infinite: true }} />
       <FadeCarousel
         totalItems={6}
         slidesToShow={1}
@@ -99,7 +103,7 @@ export function App() {
             }}
           />
         ))}
-      />
+      /> */}
     </div>
   );
 }

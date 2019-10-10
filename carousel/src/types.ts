@@ -1,29 +1,8 @@
-import { EventObject, StateNodeConfig } from "xstate";
+import { EventObject } from "xstate";
 
 export type CarouselState = "first" | "middle" | "last";
 export type CarouselType = "Unary" | "Binary" | "Ternary";
-export type CarouselContext = {
-  cursor: number;
-  min: number;
-  max: number;
-  dir: Dir;
-  infinite: boolean;
-  slidesToShow: number;
-  groups: Group[];
-};
-export type CarouselStateSchema = {
-  states: {
-    first: {};
-    middle: {};
-    last: {};
-  };
-};
-export type CarouselStateSchemaWithAutoplay = {
-  states: {
-    playing: CarouselStateSchema;
-    paused: CarouselStateSchema;
-  };
-};
+
 export type UnaryCarouselStateSchema = {
   states: {
     running: {};
@@ -31,14 +10,37 @@ export type UnaryCarouselStateSchema = {
 };
 export type BinaryCarouselStateSchema = {
   states: {
-    first: {};
-    last: {};
+    paused: {};
+    playing: {
+      states: {
+        waiting: {
+          states: {
+            tmp: {};
+            first: {};
+            last: {};
+          };
+        };
+        transitioning: {};
+      };
+    };
   };
 };
-export type BinaryCarouselStateSchemaWithAutoplay = {
+export type TernaryCarouselStateSchema = {
   states: {
-    playing: BinaryCarouselStateSchema;
-    paused: BinaryCarouselStateSchema;
+    paused: {};
+    playing: {
+      states: {
+        waiting: {
+          states: {
+            tmp: {};
+            first: {};
+            middle: {};
+            last: {};
+          };
+        };
+        transitioning: {};
+      };
+    };
   };
 };
 
@@ -52,6 +54,7 @@ export type CarouselConfig = {
   infinite?: boolean;
   slidesToShow?: number;
   responsive?: boolean;
+  transitionDelay?: number;
 };
 export type CarouselProps = CarouselConfig & {
   items: JSX.Element[];
@@ -66,10 +69,11 @@ export type HeadlessCarouselProps = CarouselConfig & {
 
 export type Dir = "ltr" | "rtl";
 
-export type CarouselStateNodeConfig = StateNodeConfig<
-  CarouselContext,
-  CarouselStateSchema,
-  CarouselEvent
->;
-
 export type Group = number[];
+export type TernaryContext = {
+  cursor: number;
+  groups: Group[];
+  infinite: boolean;
+  dir: Dir;
+  autoPlay?: number;
+};

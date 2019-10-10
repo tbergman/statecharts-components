@@ -71,7 +71,15 @@ export function RailCarousel(props: CarouselProps) {
   return (
     <HeadlessCarousel {...settings}>
       {headlessCarousel => (
-        <div className="rail-carousel">
+        <div
+          className="rail-carousel"
+          style={
+            {
+              "--transition-delay": `${settings.transitionDelay}ms`,
+            } as React.CSSProperties
+          }
+        >
+          <pre>{JSON.stringify(headlessCarousel.state)}</pre>
           <div className="items-list" ref={listRef}>
             <div
               className="items-track cf"
@@ -125,17 +133,15 @@ export function RailCarousel(props: CarouselProps) {
                 PAUSE
               </button>
             )}
-          {hasAutoPlay(settings) &&
-            typeof headlessCarousel.state === "object" &&
-            !!headlessCarousel.state.paused && (
-              <button
-                onClick={() => {
-                  headlessCarousel.play();
-                }}
-              >
-                PLAY
-              </button>
-            )}
+          {hasAutoPlay(settings) && headlessCarousel.state === "paused" && (
+            <button
+              onClick={() => {
+                headlessCarousel.play();
+              }}
+            >
+              PLAY
+            </button>
+          )}
           {headlessCarousel.type !== "Unary" && (
             <Dots
               dots={headlessCarousel.data.groups}
