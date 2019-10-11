@@ -1,9 +1,9 @@
 import React from "react";
 import { CarouselProps } from "../../types";
 import "./index.css";
-import { defaultConfig } from "../../machine/config";
 import { hasAutoPlay } from "../../utils";
 import { HeadlessCarousel } from "../HeadlessCarousel";
+import { defaultConfig } from "../../machine/config";
 
 function Dots({
   dots,

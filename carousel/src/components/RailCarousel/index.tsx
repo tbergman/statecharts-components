@@ -40,7 +40,13 @@ function Dots({
 
 export function RailCarousel(props: CarouselProps) {
   const settings = { ...defaultConfig, ...props };
-  const { items, totalItems, slidesToShow } = settings;
+  const {
+    items,
+    totalItems,
+    slidesToShow,
+    transitionDelay,
+    responsive,
+  } = settings;
 
   // Calculate each item's width based on slidesToSHow
   const [itemWidth, setItemWidth] = React.useState(1);
@@ -54,7 +60,7 @@ export function RailCarousel(props: CarouselProps) {
   React.useLayoutEffect(() => {
     updateLayout();
 
-    if (settings.responsive) {
+    if (responsive) {
       window.addEventListener("resize", updateLayout);
     }
 
@@ -75,7 +81,7 @@ export function RailCarousel(props: CarouselProps) {
           className="rail-carousel"
           style={
             {
-              "--transition-delay": `${settings.transitionDelay}ms`,
+              "--transition-delay": `${transitionDelay}ms`,
             } as React.CSSProperties
           }
         >

@@ -1,11 +1,10 @@
-import { indexInGroup, constructGroups } from "../utils";
+import { constructGroups } from "../utils";
 import {
-  CarouselEvent,
   TernaryCarouselStateSchema,
   HeadlessCarouselProps,
-  TernaryContext,
+  Context,
 } from "../types";
-import { Machine } from "xstate";
+import { Machine, EventObject } from "xstate";
 import { cancel } from "xstate/lib/actions";
 import {
   isCursorValid,
@@ -30,8 +29,7 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
   } = config;
   const groups = constructGroups({ totalItems, slidesToShow, startIndex });
 
-  let initialContext: TernaryContext;
-  initialContext = {
+  const initialContext: Context = {
     cursor: startIndex,
     groups,
     infinite,
@@ -39,11 +37,7 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
     autoPlay,
   };
 
-  const machine = Machine<
-    TernaryContext,
-    TernaryCarouselStateSchema,
-    CarouselEvent
-  >(
+  const machine = Machine<Context, TernaryCarouselStateSchema, EventObject>(
     {
       id: "ternaryCarousel",
       initial: "playing",

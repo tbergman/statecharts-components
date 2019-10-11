@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { useMachine } from "@xstate/react";
 import { carouselMachineFactory } from "../../machine/factory";
 import {
   CarouselType,
   CarouselEvent,
-  TernaryContext,
+  Context,
   HeadlessCarouselProps,
 } from "../../types";
-import { getCarouselType } from "../../utils";
-import { StateValue } from "xstate";
+import { getCarouselType, noop } from "../../utils";
+import { StateValue, EventObject } from "xstate";
 
 type ChildrenProps<T> = {
   state: StateValue;
@@ -19,17 +19,22 @@ type ChildrenProps<T> = {
   play: () => void;
   pause: () => void;
   type: CarouselType;
-  //   onTransition?: (state: State<CarouselContext, CarouselEvent>) => void;
+  onTransition?: () => void;
 };
 
-export function HeadlessCarousel<TContext>(
+export function HeadlessCarousel(
   props: HeadlessCarouselProps & {
-    children: (childProps: ChildrenProps<TernaryContext>) => JSX.Element;
+    children: (childProps: ChildrenProps<Context>) => JSX.Element;
   },
 ) {
-  const { totalItems, slidesToShow } = props;
+  const {
+    totalItems,
+    slidesToShow,
+    onTransition = noop,
+    onEvent = noop,
+  } = props;
   const type = getCarouselType(totalItems, slidesToShow);
-  const [state, sendEvent, service] = useMachine<any, CarouselEvent>(
+  const [state, sendEvent, service] = useMachine<any, EventObject>(
     carouselMachineFactory(props).withConfig({
       delays: {
         ...(props.autoPlay && { AUTOPLAY: props.autoPlay }),
@@ -37,31 +42,27 @@ export function HeadlessCarousel<TContext>(
       },
     }),
   );
-
-  function isDelayedEvent(type: string) {
-    return type.includes("xstate.after");
-  }
+  const externalEvents: CarouselEvent[] = [
+    "NEXT",
+    "PREV",
+    "GO_TO",
+    "PLAY",
+    "PAUSE",
+  ];
 
   React.useEffect(() => {
     service.onEvent(evt => {
-      console.log(
-        `${(JSON.stringify(service.state.value)
-          .split(":")
-          .pop() as string).replace(/}/g, "")} , ${(JSON.stringify(state.value)
-          .split(":")
-          .pop() as string).replace(/}/g, "")}, ${
-          !isDelayedEvent(evt.type)
-            ? evt.type
-            : (evt.type.match(/\(.+\)/) as RegExpMatchArray)[0]
-        }`,
-      );
+      const type = evt.type as CarouselEvent;
+      if (externalEvents.includes(type)) {
+        onEvent(type);
+      }
     });
     service.onTransition(state => {
       if (state.changed) {
-        // console.log(state.value);
-        // console.log(state.nextEvents);
-        // console.log(state.context);
-        // console.log(state.value);
+        const type = state.event.type as CarouselEvent;
+        if (externalEvents.includes(type)) {
+          onTransition();
+        }
       }
     });
   }, []);
