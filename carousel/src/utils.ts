@@ -111,21 +111,6 @@ export function isNumber(num: number) {
   return typeof num === "number" && isFinite(num) && !isNaN(num);
 }
 
-export function isEven(number: number) {
-  return isNumber(number) && number % 2 === 0;
-}
-
-export function isOdd(number: number) {
-  return isNumber(number) && number % 2 !== 0;
-}
-
-export function getArrayFirstAndLast<T>(array: Array<T>) {
-  const len = array.length;
-  const first = array[0];
-  const last = array[len - 1];
-  return { first, last };
-}
-
 export function getCarouselType(
   totalItems: number,
   slidesToShow: number,
@@ -143,3 +128,7 @@ export function getCarouselType(
 }
 
 export function noop() {}
+
+export function isDelayedEvent(type: string) {
+  return type.includes("xstate.after");
+}

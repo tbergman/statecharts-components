@@ -22,12 +22,6 @@ export function carouselMachineFactory(config: HeadlessCarouselProps) {
   if (autoPlay !== undefined && !isAutoPlayValidNumber(autoPlay)) {
     throw Error("property `autoPlay` should be a valid, non-zero number");
   }
-  // Validate slidesToShow to be a number in the range of min and max
-  if (slidesToShow < 1 || slidesToShow > totalItems) {
-    throw Error(
-      `invalid property \`slidesToShow\` on carouselMachine. \`slidesToShow\` should satisfy (1 <= slidesToShow <= totalItems)\n\`slidesToShow\` can not be ${slidesToShow} when \`totalItems\` is ${totalItems}`,
-    );
-  }
 
   /**
    * Machine config

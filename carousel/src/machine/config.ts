@@ -1,4 +1,5 @@
 import { Dir } from "../types";
+import { noop } from "../utils";
 
 export const defaultConfig = {
   dir: "ltr" as Dir,
@@ -7,4 +8,6 @@ export const defaultConfig = {
   startIndex: 1,
   responsive: true,
   transitionDelay: 350,
+  onTransition: noop,
+  onEvent: noop,
 };
