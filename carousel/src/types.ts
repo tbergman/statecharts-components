@@ -1,7 +1,6 @@
-import { EventObject } from "xstate";
-
 export type CarouselState = "first" | "middle" | "last";
 export type CarouselType = "Unary" | "Binary" | "Ternary";
+export type CarouselEvent = "NEXT" | "PREV" | "GO_TO" | "PLAY" | "PAUSE";
 
 export type UnaryCarouselStateSchema = {
   states: {
@@ -44,8 +43,6 @@ export type TernaryCarouselStateSchema = {
   };
 };
 
-export type CarouselEvent = EventObject;
-
 export type CarouselConfig = {
   totalItems: number;
   startIndex?: number;
@@ -56,21 +53,24 @@ export type CarouselConfig = {
   responsive?: boolean;
   transitionDelay?: number;
 };
-export type CarouselProps = CarouselConfig & {
-  items: JSX.Element[];
-};
 
 export type HeadlessCarouselProps = CarouselConfig & {
   startIndex: number;
   slidesToShow: number;
   infinite: boolean;
   dir: Dir;
+  onTransition?: () => void;
+  onEvent?: (eventType: CarouselEvent) => void;
+};
+
+export type CarouselProps = HeadlessCarouselProps & {
+  items: JSX.Element[];
 };
 
 export type Dir = "ltr" | "rtl";
 
 export type Group = number[];
-export type TernaryContext = {
+export type Context = {
   cursor: number;
   groups: Group[];
   infinite: boolean;

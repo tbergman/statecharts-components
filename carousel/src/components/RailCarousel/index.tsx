@@ -4,39 +4,8 @@ import "./index.css";
 import { defaultConfig } from "../../machine/config";
 import { hasAutoPlay } from "../../utils";
 import { HeadlessCarousel } from "../HeadlessCarousel";
-
-function Dots({
-  dots,
-  onDotClick,
-  activeIndex,
-}: {
-  dots: any[];
-  onDotClick: Function;
-  activeIndex: number;
-}) {
-  return (
-    <div className="dots">
-      {dots.map((_, i) => (
-        <div
-          key={i}
-          style={{
-            width: 10,
-            height: 10,
-            backgroundColor: i === activeIndex ? "orange" : "#eee",
-            borderRadius: "50%",
-            display: "inline-block",
-            margin: "0 5px",
-            cursor: "pointer",
-          }}
-          onClick={() => {
-            // Send the cursor of the group (1...ctx.groups.length)
-            onDotClick(i + 1);
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+import { CarouselItem } from "../CarouselItem";
+import { Dots } from "../Dot";
 
 export function RailCarousel(props: CarouselProps) {
   const settings = { ...defaultConfig, ...props };
@@ -88,7 +57,7 @@ export function RailCarousel(props: CarouselProps) {
           <pre>{JSON.stringify(headlessCarousel.state)}</pre>
           <div className="items-list" ref={listRef}>
             <div
-              className="items-track cf"
+              className="items-track"
               style={{
                 width: totalWidth,
                 transform: `translate3d(${(headlessCarousel.data.cursor - 1) *
@@ -97,37 +66,30 @@ export function RailCarousel(props: CarouselProps) {
               }}
             >
               {items.map((item, itemIdx) => (
-                <div className="cf items-group" key={itemIdx}>
+                <div className="items-group" key={itemIdx}>
                   <div
                     className="item"
                     style={{ width: itemWidth, overflow: "hidden" }}
                     key={item.key || itemIdx}
                   >
-                    {React.cloneElement(item, {
-                      ...item.props,
-                      style: { ...item.props.style, maxWidth: "100%" },
-                    })}
+                    <CarouselItem item={item} />
                   </div>
                 </div>
               ))}
             </div>
           </div>
-          {headlessCarousel.type !== "Unary" && (
-            <button
-              className="next"
-              onClick={() => {
-                headlessCarousel.next();
-              }}
-            />
-          )}
-          {headlessCarousel.type !== "Unary" && (
-            <button
-              className="prev"
-              onClick={() => {
-                headlessCarousel.prev();
-              }}
-            />
-          )}
+          <button
+            className="next"
+            onClick={() => {
+              headlessCarousel.next();
+            }}
+          />
+          <button
+            className="prev"
+            onClick={() => {
+              headlessCarousel.prev();
+            }}
+          />
           {hasAutoPlay(settings) &&
             typeof headlessCarousel.state === "object" &&
             !!headlessCarousel.state.playing && (
@@ -148,13 +110,11 @@ export function RailCarousel(props: CarouselProps) {
               PLAY
             </button>
           )}
-          {headlessCarousel.type !== "Unary" && (
-            <Dots
-              dots={headlessCarousel.data.groups}
-              onDotClick={headlessCarousel.goTo}
-              activeIndex={headlessCarousel.data.cursor - 1}
-            />
-          )}
+          <Dots
+            dots={headlessCarousel.data.groups}
+            onDotClick={headlessCarousel.goTo}
+            activeIndex={headlessCarousel.data.cursor - 1}
+          />
         </div>
       )}
     </HeadlessCarousel>

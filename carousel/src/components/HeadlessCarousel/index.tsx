@@ -18,7 +18,6 @@ type ChildrenProps<T> = {
   goTo: (index: number) => void;
   play: () => void;
   pause: () => void;
-  type: CarouselType;
   onTransition?: () => void;
 };
 
@@ -33,7 +32,6 @@ export function HeadlessCarousel(
     onTransition = noop,
     onEvent = noop,
   } = props;
-  const type = getCarouselType(totalItems, slidesToShow);
   const [state, sendEvent, service] = useMachine<any, EventObject>(
     carouselMachineFactory(props).withConfig({
       delays: {
@@ -58,6 +56,7 @@ export function HeadlessCarousel(
       }
     });
     service.onTransition(state => {
+      console.log(state.tree);
       if (state.changed) {
         const type = state.event.type as CarouselEvent;
         if (externalEvents.includes(type)) {
@@ -85,6 +84,5 @@ export function HeadlessCarousel(
     pause: () => {
       sendEvent({ type: "PAUSE" });
     },
-    type,
   });
 }
