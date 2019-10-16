@@ -1,9 +1,9 @@
-import { UnaryCarouselStateSchema } from "../types";
+import { UnaryCarouselStateSchema, Context } from "../types";
 
 import { Machine } from "xstate";
 
 export function unaryCarouselMachine() {
-  return Machine<undefined, UnaryCarouselStateSchema>({
+  return Machine<Context, UnaryCarouselStateSchema>({
     id: "unaryCarousel",
     initial: "running",
     states: {

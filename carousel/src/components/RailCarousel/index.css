@@ -41,8 +41,11 @@
   left: 0;
   display: flex;
   flex-direction: row;
+  align-items: center;
   margin-left: auto;
   margin-right: auto;
+}
+.rail-carousel .items-track.animated {
   transition: transform var(--transition-delay) ease;
 }
 
@@ -52,6 +55,7 @@
   width: 100%;
   display: flex;
   flex-direction: row;
+  border: 1px solid;
 }
 
 .rail-carousel .item {
@@ -60,6 +64,16 @@
   flex-basis: 0;
   flex-grow: 1;
   text-align: center;
+  position: relative;
+  touch-action: none;
+  cursor: grab;
+}
+.rail-carousel .item.grabbing {
+  cursor: grabbing;
+}
+
+.item img {
+  pointer-events: none;
 }
 
 .rail-carousel .dots {

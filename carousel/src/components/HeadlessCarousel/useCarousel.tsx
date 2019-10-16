@@ -1,18 +1,14 @@
-import { useEffect } from "react";
-import { useMachine } from "@xstate/react";
-import { carouselMachineFactory } from "../../machine/factory";
-import { CarouselEvent, Context, HeadlessCarouselProps } from "../../types";
-import { noop } from "../../utils";
-import { EventObject } from "xstate";
+import { HeadlessCarouselProps, CarouselEvent, Context } from "../../types";
 import { ChildrenProps } from "./types";
+import { noop } from "../../utils";
+import { carouselMachineFactory } from "../../machine/factory";
+import { useMachine } from "@xstate/react";
+import { EventObject } from "xstate";
+import { useEffect } from "react";
 
-export function HeadlessCarousel(
-  props: HeadlessCarouselProps & {
-    children: (childProps: ChildrenProps) => JSX.Element;
-  },
-) {
+export function useCarousel(props: HeadlessCarouselProps): ChildrenProps {
   const { onTransition = noop, onEvent = noop } = props;
-  const [state, sendEvent, service] = useMachine<any, EventObject>(
+  const [state, sendEvent, service] = useMachine<Context, EventObject>(
     carouselMachineFactory(props).withConfig({
       delays: {
         ...(props.autoPlay && { AUTOPLAY: props.autoPlay }),
@@ -20,6 +16,11 @@ export function HeadlessCarousel(
       },
     }),
   );
+
+  useEffect(() => {
+    console.log(service.machine.config);
+  }, []);
+
   const externalEvents: CarouselEvent[] = [
     "NEXT",
     "PREV",
@@ -47,7 +48,7 @@ export function HeadlessCarousel(
     });
   }, []);
 
-  return props.children({
+  return {
     state: state.value,
     data: state.context,
     next: () => {
@@ -71,5 +72,5 @@ export function HeadlessCarousel(
     release: () => {
       sendEvent("RELEASE");
     },
-  });
+  };
 }

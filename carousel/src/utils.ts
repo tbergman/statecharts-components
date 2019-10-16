@@ -132,3 +132,24 @@ export function noop() {}
 export function isDelayedEvent(type: string) {
   return type.includes("xstate.after");
 }
+
+export function getRandomFromArray<T>(array: T[]) {
+  const { length } = array;
+  return array[Math.floor(Math.random() * length)];
+}
+
+export function isPercentage(perc: string) {
+  return perc.trim().endsWith("%");
+}
+
+export function parsePercentage(perc: string) {
+  if (!isPercentage(perc)) {
+    throw Error(`invalid percentage: ${perc}`);
+  }
+
+  let parsed = parseFloat(perc);
+  if (isNaN(parsed)) {
+    throw Error(`invalid percentage: ${perc}`);
+  }
+  return parsed / 100;
+}

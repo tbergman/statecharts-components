@@ -1,6 +1,6 @@
 import React from "react";
 import { RailCarousel } from "./components/RailCarousel";
-import { getRange } from "./utils";
+import { getRange, getRandomFromArray } from "./utils";
 import { HeadlessCarouselProps } from "./types";
 import { FadeCarousel } from "./components/FadeCarousel";
 import { LazyImage } from "./components/LazyImage";
@@ -8,7 +8,7 @@ import { LazyImage } from "./components/LazyImage";
 const carousels: HeadlessCarouselProps[] = [
   {
     totalItems: 7,
-    slidesToShow: 2,
+    slidesToShow: 1,
     dir: "ltr",
     infinite: true,
     startIndex: 2,
@@ -16,22 +16,41 @@ const carousels: HeadlessCarouselProps[] = [
       console.log("Ternary Transition");
     },
     onEvent: type => console.log(`Ternary Event ${type}`),
-    // transitionDelay: 10,
+    transitionDelay: 1000,
+    transitionThreshold: "25%",
+    boundaryThreshold: "25%",
     // autoPlay: 1000,
   },
   {
-    totalItems: 4,
-    slidesToShow: 3,
+    totalItems: 7,
+    slidesToShow: 1,
     dir: "ltr",
     infinite: true,
     startIndex: 2,
     onTransition: () => {
-      console.log("Binary Transition");
+      console.log("Ternary Transition");
     },
-    onEvent: type => console.log(`Binary Event ${type}`),
-    // autoPlay: 1500,
+    onEvent: type => console.log(`Ternary Event ${type}`),
+    transitionDelay: 1000,
+    transitionThreshold: "25%",
+    boundaryThreshold: "25%",
+    autoPlay: 1000,
   },
+  // {
+  //   totalItems: 4,
+  //   slidesToShow: 3,
+  //   dir: "ltr",
+  //   infinite: true,
+  //   startIndex: 2,
+  //   onTransition: () => {
+  //     console.log("Binary Transition");
+  //   },
+  //   onEvent: type => console.log(`Binary Event ${type}`),
+  //   // autoPlay: 1500,
+  // },
 ];
+
+const imageSizes = [[768, 300]];
 
 const configs: HeadlessCarouselProps[] = carousels;
 
@@ -55,13 +74,13 @@ export function App() {
       {configs.map((s, i) => (
         <React.Fragment key={i}>
           <Code content={s} />
-          <RailCarousel
+          {/* <FadeCarousel
             {...s}
             items={getRange(s.totalItems).map(p => (
               // <p
               //   style={{
               //     height: 100,
-              //     backgroundColor: "orange",
+              //     backgroundColor: "cadetblue",
               //     color: "black",
               //     display: "flex",
               //     justifyContent: "center",
@@ -74,13 +93,40 @@ export function App() {
               //   {p}
               // </p>
               <LazyImage
-                background={false}
-                src={`https://picsum.photos/600/300?random=1&random=${Math.random()}`}
+                background={true}
+                src={`https://picsum.photos/${
+                  getRandomFromArray(imageSizes)[0]
+                }/${
+                  getRandomFromArray(imageSizes)[1]
+                }?random=1&random=${Math.random()}`}
               />
-              // <iframe
-              //   width="560"
-              //   height="315"
-              //   src="https://www.youtube.com/embed/n0F6hSpxaFc"
+            ))}
+          /> */}
+          <RailCarousel
+            {...s}
+            items={getRange(s.totalItems).map(p => (
+              <p
+                style={{
+                  height: 100,
+                  backgroundColor: "cadetblue",
+                  color: "black",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  fontSize: 50,
+                  fontFamily: "monospace",
+                  margin: 0,
+                }}
+              >
+                {p}
+              </p>
+              // <LazyImage
+              //   background={true}
+              //   src={`https://picsum.photos/${
+              //     getRandomFromArray(imageSizes)[0]
+              //   }/${
+              //     getRandomFromArray(imageSizes)[1]
+              //   }?random=1&random=${Math.random()}`}
               // />
             ))}
           />

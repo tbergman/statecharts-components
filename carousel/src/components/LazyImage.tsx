@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import Spinner from "react-svg-spinner";
 
 type ImageState =
@@ -16,6 +16,7 @@ export function LazyImage({
 }) {
   const [imageState, setImageState] = useState<ImageState>({ state: "Idle" });
   const divRef = useRef<HTMLDivElement>(undefined!);
+
   useEffect(() => {
     setImageState({ state: "Loading" });
     const img = new Image();
@@ -31,9 +32,6 @@ export function LazyImage({
     });
   }, []);
 
-  // const bgWidth = imageState.img.width / refWidth;
-  // const bgHeight = imageState.img.height * bgWidth;
-
   switch (imageState.state) {
     case "Loading":
       return <Spinner />;
@@ -42,17 +40,27 @@ export function LazyImage({
         <div
           ref={divRef}
           style={{
+            width: imageState.img.width,
+            height: imageState.img.height,
+            maxWidth: "100%",
+            minWidth: "100%",
             backgroundImage: `url(${imageState.img.src})`,
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
-            backgroundSize: "contain",
+            backgroundSize: "cover",
           }}
         />
       ) : (
         <img src={imageState.img.src} />
       );
     case "Error":
-      return <span style={{ color: "red" }}>{imageState.error}</span>;
+      return (
+        <span style={{ color: "red" }}>
+          {typeof imageState.error === "string"
+            ? imageState.error
+            : imageState.error.toString()}
+        </span>
+      );
     case "Idle":
     default:
       return null;

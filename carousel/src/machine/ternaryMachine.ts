@@ -1,11 +1,11 @@
-import { constructGroups } from "../utils";
+import { constructGroups, hasAutoPlay } from "../utils";
 import {
   TernaryCarouselStateSchema,
   HeadlessCarouselProps,
   Context,
 } from "../types";
-import { Machine, EventObject } from "xstate";
-import { cancel } from "xstate/lib/actions";
+import { Machine, EventObject, StateNodeConfig } from "xstate";
+import { cancel, raise, log } from "xstate/lib/actions";
 import {
   isCursorValid,
   isInfinite,
@@ -37,181 +37,233 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
     autoPlay,
   };
 
+  const waitingState: StateNodeConfig<
+    Context,
+    {
+      states: {
+        tmp: {};
+        first: {};
+        middle: {};
+        last: {};
+      };
+    },
+    EventObject
+  > = {
+    initial: "tmp",
+    on: {
+      GO_TO: {
+        target: `transitioning`,
+        cond: "cursorValid",
+        actions: "setCursorOnGoTo",
+      },
+      TRANSITION: "transitioning",
+    },
+    states: {
+      tmp: {
+        on: {
+          "": [
+            {
+              target: "first",
+              cond: (ctx: Context) => isCursorOnFirstItem(ctx),
+            },
+            {
+              target: "middle",
+              cond: (ctx: Context) => isCursorOnMiddleItems(ctx),
+            },
+            {
+              target: "last",
+              cond: (ctx: Context) => isCursorOnLastItem(ctx),
+            },
+          ],
+        },
+      },
+      first: {
+        on: {
+          NEXT: [
+            {
+              target: "first",
+              cond: (ctx: Context) => !isInfinite(ctx) && isRtl(ctx),
+            },
+            {
+              cond: (ctx: Context) => isInfinite(ctx) && isRtl(ctx),
+              actions: ["setCursorToLast", raise("TRANSITION")],
+            },
+            {
+              actions: ["setCursorToFirstMiddleItem", raise("TRANSITION")],
+            },
+          ],
+          PREV: [
+            {
+              target: "first",
+              cond: (ctx: Context) => !isInfinite(ctx) && !isRtl(ctx),
+            },
+            {
+              cond: (ctx: Context) => isInfinite(ctx) && !isRtl(ctx),
+              actions: ["setCursorToLast", raise("TRANSITION")],
+            },
+            {
+              actions: ["setCursorToFirstMiddleItem", raise("TRANSITION")],
+            },
+          ],
+        },
+      },
+      middle: {
+        on: {
+          NEXT: [
+            {
+              cond: (ctx: Context) =>
+                isCursorOnLastMiddleItem(ctx) && !isRtl(ctx),
+              actions: ["setCursorToLast", raise("TRANSITION")],
+            },
+            {
+              cond: (ctx: Context) =>
+                isCursorOnFirstMiddleItem(ctx) && isRtl(ctx),
+              actions: ["setCursorToFirst", raise("TRANSITION")],
+            },
+            {
+              cond: (ctx: Context) => !isRtl(ctx),
+              actions: ["incrementCursor", raise("TRANSITION")],
+            },
+            {
+              cond: (ctx: Context) => isRtl(ctx),
+              actions: ["decrementCursor", raise("TRANSITION")],
+            },
+          ],
+          PREV: [
+            {
+              cond: (ctx: Context) =>
+                isCursorOnLastMiddleItem(ctx) && isRtl(ctx),
+              actions: ["setCursorToLast", raise("TRANSITION")],
+            },
+            {
+              cond: (ctx: Context) =>
+                isCursorOnFirstMiddleItem(ctx) && !isRtl(ctx),
+              actions: ["setCursorToFirst", raise("TRANSITION")],
+            },
+            {
+              cond: (ctx: Context) => !isRtl(ctx),
+              actions: ["decrementCursor", raise("TRANSITION")],
+            },
+            {
+              cond: (ctx: Context) => isRtl(ctx),
+              actions: ["incrementCursor", raise("TRANSITION")],
+            },
+          ],
+        },
+      },
+      last: {
+        on: {
+          NEXT: [
+            {
+              target: "last",
+              cond: (ctx: Context) => !isInfinite(ctx) && !isRtl(ctx),
+            },
+            {
+              cond: (ctx: Context) => isInfinite(ctx) && !isRtl(ctx),
+              actions: ["setCursorToFirst", raise("TRANSITION")],
+            },
+            {
+              actions: ["setCursorToLastMiddleItem", raise("TRANSITION")],
+            },
+          ],
+          PREV: [
+            {
+              target: "last",
+              cond: (ctx: Context) => !isInfinite(ctx) && isRtl(ctx),
+            },
+            {
+              cond: (ctx: Context) => isInfinite(ctx) && isRtl(ctx),
+              actions: ["setCursorToFirst", raise("TRANSITION")],
+            },
+            {
+              actions: ["setCursorToLastMiddleItem", raise("TRANSITION")],
+            },
+          ],
+        },
+      },
+    },
+  };
+
   const machine = Machine<Context, TernaryCarouselStateSchema, EventObject>(
     {
       id: "ternaryCarousel",
-      initial: "playing",
+      initial: hasAutoPlay(config) ? "autoplay_on" : "autoplay_off",
       context: initialContext,
       states: {
-        paused: {
-          id: "paused",
-          on: {
-            PLAY: "#ternaryCarousel.playing",
-          },
-        },
-        playing: {
-          initial: "waiting",
-          id: "playing",
+        autoplay_on: {
+          initial: "released",
           states: {
-            waiting: {
-              initial: "tmp",
-              // Autoplay
-              entry: sendNextOnAutoplay(config),
-              exit: cancel("sendAutoPlay"),
-              // /Autoplay
+            grabbed: {
               on: {
-                PAUSE: "#ternaryCarousel.paused",
-                GO_TO: {
-                  target: "#transitioning",
-                  cond: "cursorValid",
-                  actions: "setCursorOnGoTo",
-                },
+                RELEASE: "released",
+              },
+            },
+            released: {
+              id: "released_on",
+              initial: "playing",
+              on: {
+                GRAB: "grabbed",
               },
               states: {
-                tmp: {
+                paused: {
+                  id: "paused",
+                  initial: "waiting",
                   on: {
-                    "": [
-                      {
-                        target: "first",
-                        cond: ctx => isCursorOnFirstItem(ctx),
+                    PLAY: "#playing",
+                  },
+                  states: {
+                    waiting: waitingState,
+                    transitioning: {
+                      after: {
+                        TRANSITION_DELAY: "waiting",
                       },
-                      {
-                        target: "middle",
-                        cond: ctx => isCursorOnMiddleItems(ctx),
-                      },
-                      {
-                        target: "last",
-                        cond: ctx => isCursorOnLastItem(ctx),
-                      },
-                    ],
+                    },
                   },
                 },
-                first: {
-                  on: {
-                    NEXT: [
-                      {
-                        target: "first",
-                        cond: ctx => !isInfinite(ctx) && isRtl(ctx),
+                playing: {
+                  initial: "waiting",
+                  id: "playing",
+                  on: { PAUSE: "#paused" },
+                  states: {
+                    waiting: {
+                      ...waitingState,
+                      // Autoplay
+                      entry: sendNextOnAutoplay(config),
+                      exit: cancel("sendAutoPlay"),
+                      // /Autoplay
+                    },
+                    transitioning: {
+                      after: {
+                        TRANSITION_DELAY: "waiting",
                       },
-                      {
-                        target: "#transitioning",
-                        cond: ctx => isInfinite(ctx) && isRtl(ctx),
-                        actions: "setCursorToLast",
-                      },
-                      {
-                        target: "#transitioning",
-                        actions: "setCursorToFirstMiddleItem",
-                      },
-                    ],
-                    PREV: [
-                      {
-                        target: "first",
-                        cond: ctx => !isInfinite(ctx) && !isRtl(ctx),
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx => isInfinite(ctx) && !isRtl(ctx),
-                        actions: "setCursorToLast",
-                      },
-                      {
-                        target: "#transitioning",
-                        actions: "setCursorToFirstMiddleItem",
-                      },
-                    ],
-                  },
-                },
-                middle: {
-                  on: {
-                    NEXT: [
-                      {
-                        target: "#transitioning",
-                        cond: ctx =>
-                          isCursorOnLastMiddleItem(ctx) && !isRtl(ctx),
-                        actions: "setCursorToLast",
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx =>
-                          isCursorOnFirstMiddleItem(ctx) && isRtl(ctx),
-                        actions: "setCursorToFirst",
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx => !isRtl(ctx),
-                        actions: "incrementCursor",
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx => isRtl(ctx),
-                        actions: "decrementCursor",
-                      },
-                    ],
-                    PREV: [
-                      {
-                        target: "#transitioning",
-                        cond: ctx =>
-                          isCursorOnLastMiddleItem(ctx) && isRtl(ctx),
-                        actions: "setCursorToLast",
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx =>
-                          isCursorOnFirstMiddleItem(ctx) && !isRtl(ctx),
-                        actions: "setCursorToFirst",
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx => !isRtl(ctx),
-                        actions: "decrementCursor",
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx => isRtl(ctx),
-                        actions: "incrementCursor",
-                      },
-                    ],
-                  },
-                },
-                last: {
-                  on: {
-                    NEXT: [
-                      {
-                        target: "last",
-                        cond: ctx => !isInfinite(ctx) && !isRtl(ctx),
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx => isInfinite(ctx) && !isRtl(ctx),
-                        actions: "setCursorToFirst",
-                      },
-                      {
-                        target: "#transitioning",
-                        actions: "setCursorToLastMiddleItem",
-                      },
-                    ],
-                    PREV: [
-                      {
-                        target: "last",
-                        cond: ctx => !isInfinite(ctx) && isRtl(ctx),
-                      },
-                      {
-                        target: "#transitioning",
-                        cond: ctx => isInfinite(ctx) && isRtl(ctx),
-                        actions: "setCursorToFirst",
-                      },
-                      {
-                        target: "#transitioning",
-                        actions: "setCursorToLastMiddleItem",
-                      },
-                    ],
+                    },
                   },
                 },
               },
             },
-            transitioning: {
-              id: "transitioning",
-              after: {
-                TRANSITION_DELAY: "#playing",
+          },
+        },
+        autoplay_off: {
+          initial: "released",
+          states: {
+            grabbed: {
+              on: {
+                RELEASE: "released",
+              },
+            },
+            released: {
+              id: "released_off",
+              initial: "waiting",
+              on: {
+                GRAB: "grabbed",
+              },
+              states: {
+                waiting: waitingState,
+                transitioning: {
+                  after: {
+                    TRANSITION_DELAY: "waiting",
+                  },
+                },
               },
             },
           },
