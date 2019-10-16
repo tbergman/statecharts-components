@@ -189,6 +189,10 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
       id: "ternaryCarousel",
       initial: hasAutoPlay(config) ? "autoplay_on" : "autoplay_off",
       context: initialContext,
+      on: {
+        AUTOPLAY_ON: "autoplay_on",
+        AUTOPLAY_OFF: "autoplay_off",
+      },
       states: {
         autoplay_on: {
           initial: "released",

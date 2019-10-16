@@ -62,6 +62,8 @@ export function RailCarousel(props: CarouselProps) {
     pause,
     grab,
     release,
+    turnOn,
+    turnOff,
   } = useCarousel(settings);
   // Calculate each item's width based on slidesToShow
   const [itemWidth, setItemWidth] = useState(1);
@@ -285,6 +287,24 @@ export function RailCarousel(props: CarouselProps) {
           }}
         >
           PLAY
+        </button>
+      }
+      {
+        <button
+          onClick={() => {
+            turnOn();
+          }}
+        >
+          TURN ON
+        </button>
+      }
+      {
+        <button
+          onClick={() => {
+            turnOff();
+          }}
+        >
+          TURN OFF
         </button>
       }
       <Dots

@@ -8,7 +8,7 @@ import { LazyImage } from "./components/LazyImage";
 const carousels: HeadlessCarouselProps[] = [
   {
     totalItems: 7,
-    slidesToShow: 1,
+    slidesToShow: 2,
     dir: "ltr",
     infinite: true,
     startIndex: 2,
@@ -20,21 +20,6 @@ const carousels: HeadlessCarouselProps[] = [
     transitionThreshold: "25%",
     boundaryThreshold: "25%",
     // autoPlay: 1000,
-  },
-  {
-    totalItems: 7,
-    slidesToShow: 1,
-    dir: "ltr",
-    infinite: true,
-    startIndex: 2,
-    onTransition: () => {
-      console.log("Ternary Transition");
-    },
-    onEvent: type => console.log(`Ternary Event ${type}`),
-    transitionDelay: 1000,
-    transitionThreshold: "25%",
-    boundaryThreshold: "25%",
-    autoPlay: 1000,
   },
   // {
   //   totalItems: 4,
@@ -74,34 +59,6 @@ export function App() {
       {configs.map((s, i) => (
         <React.Fragment key={i}>
           <Code content={s} />
-          {/* <FadeCarousel
-            {...s}
-            items={getRange(s.totalItems).map(p => (
-              // <p
-              //   style={{
-              //     height: 100,
-              //     backgroundColor: "cadetblue",
-              //     color: "black",
-              //     display: "flex",
-              //     justifyContent: "center",
-              //     alignItems: "center",
-              //     fontSize: 50,
-              //     fontFamily: "monospace",
-              //     margin: 0,
-              //   }}
-              // >
-              //   {p}
-              // </p>
-              <LazyImage
-                background={true}
-                src={`https://picsum.photos/${
-                  getRandomFromArray(imageSizes)[0]
-                }/${
-                  getRandomFromArray(imageSizes)[1]
-                }?random=1&random=${Math.random()}`}
-              />
-            ))}
-          /> */}
           <RailCarousel
             {...s}
             items={getRange(s.totalItems).map(p => (
@@ -116,6 +73,7 @@ export function App() {
                   fontSize: 50,
                   fontFamily: "monospace",
                   margin: 0,
+                  width: getRandomFromArray([1000, 200, 50, 405]),
                 }}
               >
                 {p}

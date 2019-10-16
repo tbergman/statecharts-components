@@ -11,5 +11,7 @@ export type ChildrenProps = {
   pause: () => void;
   grab: () => void;
   release: () => void;
+  turnOn: () => void;
+  turnOff: () => void;
   onTransition?: () => void;
 };

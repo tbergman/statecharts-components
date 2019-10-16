@@ -15,7 +15,7 @@ export function HeadlessCarousel(
   const [state, sendEvent, service] = useMachine<any, EventObject>(
     carouselMachineFactory(props).withConfig({
       delays: {
-        ...(props.autoPlay && { AUTOPLAY: props.autoPlay }),
+        AUTOPLAY: props.autoPlay || 2000,
         TRANSITION_DELAY: props.transitionDelay || 350,
       },
     }),
@@ -28,6 +28,8 @@ export function HeadlessCarousel(
     "PAUSE",
     "GRAB",
     "RELEASE",
+    "AUTOPLAY_ON",
+    "AUTOPLAY_OFF",
   ];
 
   useEffect(() => {
@@ -70,6 +72,12 @@ export function HeadlessCarousel(
     },
     release: () => {
       sendEvent("RELEASE");
+    },
+    turnOn: () => {
+      sendEvent("AUTOPLAY_ON");
+    },
+    turnOff: () => {
+      sendEvent("AUTOPLAY_OFF");
     },
   });
 }

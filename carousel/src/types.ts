@@ -7,7 +7,9 @@ export type CarouselEvent =
   | "PLAY"
   | "PAUSE"
   | "GRAB"
-  | "RELEASE";
+  | "RELEASE"
+  | "AUTOPLAY_ON"
+  | "AUTOPLAY_OFF";
 
 export type UnaryCarouselStateSchema = {
   states: {
@@ -54,6 +56,11 @@ type TernaryWithAutoplay = {
 };
 
 export type TernaryCarouselStateSchema = {
+  /**
+   * Having both turned off and turned on machine in a single machine allows transitioning between them
+   * which means a machine with no autoplay can be turned on on demand without
+   * reinstantiating anf continue with autoplay.
+   */
   states: {
     autoplay_on: {
       states: { grabbed: {}; released: TernaryWithAutoplay };

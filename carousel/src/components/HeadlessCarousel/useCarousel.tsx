@@ -9,17 +9,14 @@ import { useEffect } from "react";
 export function useCarousel(props: HeadlessCarouselProps): ChildrenProps {
   const { onTransition = noop, onEvent = noop } = props;
   const [state, sendEvent, service] = useMachine<Context, EventObject>(
+    // Machine will always have autoplay. a machine with no autoply is a machine that hasn't been turned on yet.
     carouselMachineFactory(props).withConfig({
       delays: {
-        ...(props.autoPlay && { AUTOPLAY: props.autoPlay }),
+        AUTOPLAY: props.autoPlay || 2000,
         TRANSITION_DELAY: props.transitionDelay || 350,
       },
     }),
   );
-
-  useEffect(() => {
-    console.log(service.machine.config);
-  }, []);
 
   const externalEvents: CarouselEvent[] = [
     "NEXT",
@@ -29,6 +26,8 @@ export function useCarousel(props: HeadlessCarouselProps): ChildrenProps {
     "PAUSE",
     "GRAB",
     "RELEASE",
+    "AUTOPLAY_ON",
+    "AUTOPLAY_OFF",
   ];
 
   useEffect(() => {
@@ -71,6 +70,12 @@ export function useCarousel(props: HeadlessCarouselProps): ChildrenProps {
     },
     release: () => {
       sendEvent("RELEASE");
+    },
+    turnOn: () => {
+      sendEvent("AUTOPLAY_ON");
+    },
+    turnOff: () => {
+      sendEvent("AUTOPLAY_OFF");
     },
   };
 }
