@@ -1,7 +1,7 @@
 import { HeadlessCarouselProps, CarouselEvent, Context } from "../../types";
 import { ChildrenProps } from "./types";
 import { noop } from "../../utils";
-import { carouselMachineFactory } from "../../machine/factory";
+import { carouselMachineFactory } from "../../machines/factory";
 import { useMachine } from "@xstate/react";
 import { EventObject } from "xstate";
 import { useEffect } from "react";
@@ -31,6 +31,7 @@ export function useCarousel(props: HeadlessCarouselProps): ChildrenProps {
   ];
 
   useEffect(() => {
+    console.log(service.machine.options);
     service.onEvent(evt => {
       const type = evt.type as CarouselEvent;
       if (externalEvents.includes(type)) {
@@ -48,7 +49,7 @@ export function useCarousel(props: HeadlessCarouselProps): ChildrenProps {
   }, []);
 
   return {
-    state: state.value,
+    state: state,
     data: state.context,
     next: () => {
       sendEvent({ type: "NEXT" });

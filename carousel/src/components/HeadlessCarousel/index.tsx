@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useMachine } from "@xstate/react";
-import { carouselMachineFactory } from "../../machine/factory";
+import { carouselMachineFactory } from "../../machines/factory";
 import { CarouselEvent, Context, HeadlessCarouselProps } from "../../types";
 import { noop } from "../../utils";
 import { EventObject } from "xstate";
@@ -50,7 +50,7 @@ export function HeadlessCarousel(
   }, []);
 
   return props.children({
-    state: state.value,
+    state: state,
     data: state.context,
     next: () => {
       sendEvent({ type: "NEXT" });

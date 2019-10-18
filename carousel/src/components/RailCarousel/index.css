@@ -66,6 +66,8 @@
   text-align: center;
   position: relative;
   touch-action: none;
+}
+.rail-carousel .item.grabbable {
   cursor: grab;
 }
 .rail-carousel .item.grabbing {

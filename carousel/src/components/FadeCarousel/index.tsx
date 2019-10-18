@@ -3,7 +3,7 @@ import { CarouselProps } from "../../types";
 import "./index.css";
 import { hasAutoPlay } from "../../utils";
 import { HeadlessCarousel } from "../HeadlessCarousel";
-import { defaultConfig } from "../../machine/config";
+import { defaultConfig } from "../../machines/config";
 import { CarouselItem } from "../CarouselItem";
 import { Dots } from "../Dot";
 import { useCarousel } from "../HeadlessCarousel/useCarousel";

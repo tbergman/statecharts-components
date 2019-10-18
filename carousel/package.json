@@ -4,18 +4,22 @@
   "private": true,
   "dependencies": {
     "@statecharts/xstate-viz": "^0.3.0",
+    "@testing-library/react": "^9.1.4",
     "@types/jest": "24.0.15",
     "@types/node": "12.6.2",
     "@types/react": "^16.8.23",
     "@types/react-dom": "16.8.4",
     "@xstate/react": "^0.7.0",
+    "@xstate/test": "^0.1.0",
+    "classnames": "^2.2.6",
     "lodash.chunk": "^4.2.0",
     "lodash.isequal": "^4.5.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
+    "react-svg-spinner": "^1.0.4",
     "typescript": "3.5.3",
-    "xstate": "^4.6.4"
+    "xstate": "^4.6.7"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -39,6 +43,7 @@
     ]
   },
   "devDependencies": {
+    "@types/classnames": "^2.2.9",
     "@types/lodash.isequal": "^4.5.5"
   }
 }

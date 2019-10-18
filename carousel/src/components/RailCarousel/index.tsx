@@ -1,8 +1,9 @@
-import React, { useRef, useState, useLayoutEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import classnames from "classnames";
 import { CarouselProps } from "../../types";
 import "./index.css";
-import { defaultConfig } from "../../machine/config";
-import { hasAutoPlay, parsePercentage } from "../../utils";
+import { defaultConfig } from "../../machines/config";
+import { parsePercentage } from "../../utils";
 import { CarouselItem } from "../CarouselItem";
 import { Dots } from "../Dot";
 import { useCarousel } from "../HeadlessCarousel/useCarousel";
@@ -48,6 +49,7 @@ export function RailCarousel(props: CarouselProps) {
     slidesToShow,
     transitionDelay,
     responsive,
+    swipe,
     boundaryThreshold: propsBoundaryThreshold,
     transitionThreshold: propsTransitionThreshold,
   } = settings;
@@ -65,6 +67,7 @@ export function RailCarousel(props: CarouselProps) {
     turnOn,
     turnOff,
   } = useCarousel(settings);
+
   // Calculate each item's width based on slidesToShow
   const [itemWidth, setItemWidth] = useState(1);
   const listRef = useRef<HTMLDivElement>(null!);
@@ -73,7 +76,6 @@ export function RailCarousel(props: CarouselProps) {
   const [transitionThreshold, setTransitionThreshold] = useState(50);
   const [move, setMove] = useState(0);
   const start = useRef<number>(0);
-  const [isGrabbing, setGrabbing] = useState(false);
 
   function setStart(s: number) {
     start.current = s;
@@ -89,7 +91,6 @@ export function RailCarousel(props: CarouselProps) {
   function resetTouch() {
     setMove(0);
     setStart(0);
-    setGrabbing(false);
   }
 
   function isTouchEvent(e: any) {
@@ -110,12 +111,12 @@ export function RailCarousel(props: CarouselProps) {
 
     setMove(0);
     setStart(diff);
-    setGrabbing(true);
   }
 
   function onTouchMove(e: any) {
     e.preventDefault();
-    if (!isGrabbing) {
+
+    if (!state.matches("grabbed")) {
       return;
     }
 
@@ -133,26 +134,31 @@ export function RailCarousel(props: CarouselProps) {
       return;
     }
 
-    // On the 1st item, grabbing 50 px to the right will circle back to the last item
+    // On the 1st item, grabbing by the size of boundaryThreshold to the right will circle back to the last item
     if (
       data.cursor === 1 &&
       newMove > 0 &&
       Math.abs(newMove) >= boundaryThreshold
     ) {
       release();
-      prev();
+      // TODO: this needs to be represented in Machine layer
+      data.dir === "ltr" && prev();
+      data.dir === "rtl" && next();
+      // prev();
       resetTouch();
       return;
     }
 
-    // On the last item, grabbing 50 px to the left will circle back to the 1st item
+    // On the last item, grabbing by the size of  boundaryThreshold to the left will circle back to the 1st item
     if (
       data.cursor === data.groups.length &&
       newMove < 0 &&
       Math.abs(newMove) >= boundaryThreshold
     ) {
       release();
-      next();
+      data.dir === "ltr" && next();
+      data.dir === "rtl" && prev();
+      // next();
       resetTouch();
       return;
     }
@@ -175,20 +181,25 @@ export function RailCarousel(props: CarouselProps) {
     if (Math.abs(move) >= transitionThreshold) {
       // grab to left
       if (move < 0) {
-        next();
+        data.dir === "ltr" && next();
+        data.dir === "rtl" && prev();
+        // next();
       } else {
         // grab to right
-        prev();
+        data.dir === "ltr" && prev();
+        data.dir === "rtl" && next();
+        // prev();
       }
       resetTouch();
     }
 
     setMove(0);
     setStart(diff);
-    setGrabbing(false);
+    // setGrabbing(false);
   }
 
-  useLayoutEffect(() => {
+  // Sync boundaryThreshold and transitionThreshold with itemWidth
+  useEffect(() => {
     setBoundaryThreshold(
       handleThreshold(propsBoundaryThreshold, itemWidth, 50),
     );
@@ -197,7 +208,8 @@ export function RailCarousel(props: CarouselProps) {
     );
   }, [itemWidth]);
 
-  useLayoutEffect(() => {
+  // Resize listener
+  useEffect(() => {
     updateLayout();
 
     if (responsive) {
@@ -210,9 +222,16 @@ export function RailCarousel(props: CarouselProps) {
     };
   }, []);
 
-  if (!itemWidth) return null;
-
   const totalWidth = totalItems * itemWidth;
+
+  const swipeEventListeners = {
+    onMouseDown: onTouchStart,
+    onTouchStart: onTouchStart,
+    onMouseUp: onTouchEnd,
+    onTouchEnd: onTouchEnd,
+    onMouseMove: onTouchMove,
+    onTouchMove: onTouchMove,
+  };
 
   return (
     <div
@@ -223,12 +242,14 @@ export function RailCarousel(props: CarouselProps) {
         } as React.CSSProperties
       }
     >
-      <pre>{JSON.stringify(state)}</pre>
+      <pre>{JSON.stringify(state.value)}</pre>
       <pre>cursor: {data.cursor}</pre>
       <div className="items-list" ref={listRef}>
         <div
           ref={trackRef}
-          className={`items-track ${!isGrabbing && "animated"}`}
+          className={classnames("items-track", {
+            animated: !state.matches("grabbed"),
+          })}
           style={{
             width: totalWidth,
             transform: `translate3d(${(data.cursor - 1) * -1 * itemWidth +
@@ -239,18 +260,17 @@ export function RailCarousel(props: CarouselProps) {
             return (
               <div className="items-group" key={itemIdx}>
                 <div
-                  className={`item ${isGrabbing && "grabbing"}`}
+                  className={classnames("item", {
+                    grabbable: swipe,
+                    grabbing: state.matches("grabbed"),
+                  })}
                   style={{
                     width: itemWidth,
                     overflow: "hidden",
                   }}
                   key={item.key || itemIdx}
-                  onMouseDown={onTouchStart}
-                  onTouchStart={onTouchStart}
-                  onMouseUp={onTouchEnd}
-                  onTouchEnd={onTouchEnd}
-                  onMouseMove={onTouchMove}
-                  onTouchMove={onTouchMove}
+                  // Only attach swipe handlers when `swipe` config is set to true
+                  {...(swipe && swipeEventListeners)}
                 >
                   <CarouselItem item={item} />
                 </div>
@@ -305,6 +325,24 @@ export function RailCarousel(props: CarouselProps) {
           }}
         >
           TURN OFF
+        </button>
+      }
+      {
+        <button
+          onClick={() => {
+            grab();
+          }}
+        >
+          GRAB
+        </button>
+      }
+      {
+        <button
+          onClick={() => {
+            release();
+          }}
+        >
+          RELEASE
         </button>
       }
       <Dots

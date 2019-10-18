@@ -5,7 +5,7 @@ import {
   Context,
 } from "../types";
 import { Machine, EventObject, StateNodeConfig } from "xstate";
-import { cancel, raise, log } from "xstate/lib/actions";
+import { cancel, raise, log, send } from "xstate/lib/actions";
 import {
   isCursorValid,
   isInfinite,
@@ -16,7 +16,7 @@ import {
   isCursorOnMiddleItems,
   isCursorOnFirstItem,
 } from "./guards";
-import { setCursor, sendNextOnAutoplay } from "./actions";
+import { setCursor } from "./actions";
 
 export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
   const {
@@ -26,6 +26,7 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
     infinite,
     dir,
     autoPlay,
+    swipe = false,
   } = config;
   const groups = constructGroups({ totalItems, slidesToShow, startIndex });
 
@@ -35,6 +36,7 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
     infinite,
     dir,
     autoPlay,
+    swipe,
   };
 
   const waitingState: StateNodeConfig<
@@ -184,30 +186,33 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
     },
   };
 
+  const grabbedState = {
+    on: {
+      RELEASE: "released.hist",
+    },
+  };
+
   const machine = Machine<Context, TernaryCarouselStateSchema, EventObject>(
     {
       id: "ternaryCarousel",
-      initial: hasAutoPlay(config) ? "autoplay_on" : "autoplay_off",
+      initial: "released",
       context: initialContext,
-      on: {
-        AUTOPLAY_ON: "autoplay_on",
-        AUTOPLAY_OFF: "autoplay_off",
-      },
       states: {
-        autoplay_on: {
-          initial: "released",
+        grabbed: grabbedState,
+        released: {
+          initial: hasAutoPlay(config) ? "autoplay_on" : "autoplay_off",
+          on: {
+            GRAB: { target: "grabbed", cond: ctx => ctx.swipe === true },
+            AUTOPLAY_ON: "released.autoplay_on",
+            AUTOPLAY_OFF: "released.autoplay_off",
+          },
           states: {
-            grabbed: {
-              on: {
-                RELEASE: "released",
-              },
+            hist: {
+              type: "history",
+              history: "shallow",
             },
-            released: {
-              id: "released_on",
+            autoplay_on: {
               initial: "playing",
-              on: {
-                GRAB: "grabbed",
-              },
               states: {
                 paused: {
                   id: "paused",
@@ -232,7 +237,10 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
                     waiting: {
                       ...waitingState,
                       // Autoplay
-                      entry: sendNextOnAutoplay(config),
+                      entry: send(
+                        { type: "NEXT" },
+                        { delay: "AUTOPLAY", id: "sendAutoPlay" },
+                      ),
                       exit: cancel("sendAutoPlay"),
                       // /Autoplay
                     },
@@ -245,22 +253,8 @@ export function ternaryCarouselMachine(config: HeadlessCarouselProps) {
                 },
               },
             },
-          },
-        },
-        autoplay_off: {
-          initial: "released",
-          states: {
-            grabbed: {
-              on: {
-                RELEASE: "released",
-              },
-            },
-            released: {
-              id: "released_off",
+            autoplay_off: {
               initial: "waiting",
-              on: {
-                GRAB: "grabbed",
-              },
               states: {
                 waiting: waitingState,
                 transitioning: {

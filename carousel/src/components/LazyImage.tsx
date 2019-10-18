@@ -40,8 +40,9 @@ export function LazyImage({
         <div
           ref={divRef}
           style={{
-            width: imageState.img.width,
-            height: imageState.img.height,
+            // width: imageState.img.width,
+            // height: imageState.img.height,
+            paddingBottom: "100%",
             maxWidth: "100%",
             minWidth: "100%",
             backgroundImage: `url(${imageState.img.src})`,

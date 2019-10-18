@@ -35,6 +35,7 @@ export function binaryCarouselMachine(config: HeadlessCarouselProps) {
     infinite,
     dir,
     autoPlay,
+    swipe: false,
   };
 
   const machine = Machine<Context, any, EventObject>(

@@ -56,7 +56,7 @@ export function constructGroups({
   }
 }
 
-function rotateArrayLeft<T>(array: T[], offset: number): T[] {
+export function rotateArrayLeft<T>(array: T[], offset: number): T[] {
   const beforeOffset = array.slice(0, offset);
   const afterOffset = array.slice(offset);
   return afterOffset.concat(beforeOffset);

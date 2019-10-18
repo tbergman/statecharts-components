@@ -62,13 +62,13 @@ export type TernaryCarouselStateSchema = {
    * reinstantiating anf continue with autoplay.
    */
   states: {
-    autoplay_on: {
-      states: { grabbed: {}; released: TernaryWithAutoplay };
-    };
-    autoplay_off: {
+    // a machine with `swipe:false` is a machine that only lives in `released`state.
+    grabbed: {};
+    released: {
       states: {
-        grabbed: {};
-        released: TernaryWaiting;
+        hist: {};
+        autoplay_on: TernaryWithAutoplay;
+        autoplay_off: TernaryWaiting;
       };
     };
   };
@@ -94,6 +94,7 @@ export type HeadlessCarouselProps = CarouselConfig & {
   onEvent?: (eventType: CarouselEvent) => void;
   boundaryThreshold?: number | string;
   transitionThreshold?: number | string;
+  swipe?: boolean;
 };
 
 export type CarouselProps = HeadlessCarouselProps & {
@@ -109,4 +110,5 @@ export type Context = {
   infinite: boolean;
   dir: Dir;
   autoPlay?: number;
+  swipe: boolean;
 };

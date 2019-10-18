@@ -8,7 +8,7 @@ import { LazyImage } from "./components/LazyImage";
 const carousels: HeadlessCarouselProps[] = [
   {
     totalItems: 7,
-    slidesToShow: 2,
+    slidesToShow: 4,
     dir: "ltr",
     infinite: true,
     startIndex: 2,
@@ -19,7 +19,8 @@ const carousels: HeadlessCarouselProps[] = [
     transitionDelay: 1000,
     transitionThreshold: "25%",
     boundaryThreshold: "25%",
-    // autoPlay: 1000,
+    // swipe: false,
+    autoPlay: 1000,
   },
   // {
   //   totalItems: 4,
@@ -35,7 +36,7 @@ const carousels: HeadlessCarouselProps[] = [
   // },
 ];
 
-const imageSizes = [[768, 300]];
+const imageSizes = [[768, 300], [1000, 350]];
 
 const configs: HeadlessCarouselProps[] = carousels;
 
@@ -61,32 +62,44 @@ export function App() {
           <Code content={s} />
           <RailCarousel
             {...s}
-            items={getRange(s.totalItems).map(p => (
-              <p
-                style={{
-                  height: 100,
-                  backgroundColor: "cadetblue",
-                  color: "black",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  fontSize: 50,
-                  fontFamily: "monospace",
-                  margin: 0,
-                  width: getRandomFromArray([1000, 200, 50, 405]),
-                }}
-              >
-                {p}
-              </p>
-              // <LazyImage
-              //   background={true}
-              //   src={`https://picsum.photos/${
-              //     getRandomFromArray(imageSizes)[0]
-              //   }/${
-              //     getRandomFromArray(imageSizes)[1]
-              //   }?random=1&random=${Math.random()}`}
-              // />
-            ))}
+            items={getRange(s.totalItems).map((p, i) =>
+              i % 2 === 0 ? (
+                // <p
+                //   style={{
+                //     height: 100,
+                //     backgroundColor: "cadetblue",
+                //     color: "black",
+                //     display: "flex",
+                //     justifyContent: "center",
+                //     alignItems: "center",
+                //     fontSize: 50,
+                //     fontFamily: "monospace",
+                //     margin: 0,
+                //     width: getRandomFromArray([1000, 2000, 3000]),
+                //   }}
+                // >
+                //   {p}
+                //   <button onClick={() => alert("Yay")}>Click me</button>
+                // </p>
+                <LazyImage
+                  background={true}
+                  src={`https://picsum.photos/${
+                    getRandomFromArray(imageSizes)[0]
+                  }/${
+                    getRandomFromArray(imageSizes)[1]
+                  }?random=1&random=${Math.random()}`}
+                />
+              ) : (
+                <LazyImage
+                  background={true}
+                  src={`https://picsum.photos/${
+                    getRandomFromArray(imageSizes)[0]
+                  }/${
+                    getRandomFromArray(imageSizes)[1]
+                  }?random=1&random=${Math.random()}`}
+                />
+              ),
+            )}
           />
         </React.Fragment>
       ))}

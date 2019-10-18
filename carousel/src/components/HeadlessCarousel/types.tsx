@@ -1,8 +1,8 @@
-import { StateValue } from "xstate";
+import { StateValue, State, EventObject } from "xstate";
 import { Context } from "../../types";
 
 export type ChildrenProps = {
-  state: StateValue;
+  state: State<Context, EventObject>;
   data: Context;
   next: () => void;
   prev: () => void;
