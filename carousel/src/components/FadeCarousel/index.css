@@ -19,14 +19,20 @@
 .fade-carousel .items-group.items-group-active {
   opacity: 1;
   visibility: visible;
-  transition: opacity 500ms ease 0s, visibility 500ms ease 0s;
+  transition: opacity var(--transition-delay) ease 0s,
+    visibility var(--transition-delay) ease 0s;
   position: relative;
 }
 
 .fade-carousel .item {
   height: 100%;
   min-height: 1px;
-  /* flex-basis: 0;
-  flex-grow: 1; */
   flex: 1;
+  touch-action: none;
+}
+.fade-carousel .item.grabbable {
+  cursor: grab;
+}
+.fade-carousel .item.grabbing {
+  cursor: grabbing;
 }
