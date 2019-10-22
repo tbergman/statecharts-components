@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import classnames from "classnames";
 import { CarouselProps } from "../../types";
+import "../globalStyle.css";
 import "./index.css";
 import { defaultConfig } from "../../machines/config";
 import { parsePercentage } from "../../utils";
@@ -235,7 +236,7 @@ export function RailCarousel(props: CarouselProps) {
 
   return (
     <div
-      className="rail-carousel"
+      className="carousel rail-carousel"
       style={
         {
           "--transition-delay": `${transitionDelay}ms`,

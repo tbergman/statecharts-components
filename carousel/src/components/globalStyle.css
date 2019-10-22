@@ -1,0 +1,4 @@
+.carousel .item > * {
+  /* This is required for proper layouting in order to avoid carousel items from overflowing */
+  max-width: 100%;
+}
