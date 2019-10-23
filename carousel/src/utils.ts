@@ -153,3 +153,26 @@ export function parsePercentage(perc: string) {
   }
   return parsed / 100;
 }
+
+export function handleThreshold(
+  input: number | string,
+  baseScale: number,
+  fallback: number,
+) {
+  switch (typeof input) {
+    case "string": {
+      try {
+        const percentage = parsePercentage(input);
+        return baseScale * percentage;
+      } catch (err) {
+        return fallback;
+      }
+    }
+    case "number": {
+      return input;
+    }
+    default:
+      console.log(`invalid threshold, using fallback: ${fallback}`);
+      return fallback;
+  }
+}

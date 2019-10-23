@@ -1,20 +1,28 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import classnames from "classnames";
 import { CarouselProps } from "../../types";
 import "../globalStyle.css";
 import "./index.css";
-import { parsePercentage, handleThreshold } from "../../utils";
 import { defaultConfig } from "../../machines/config";
-import { CarouselItem } from "../CarouselItem";
-import { Dots } from "../Dot";
+import { handleThreshold } from "../../utils";
 import { useCarousel } from "../HeadlessCarousel/useCarousel";
-import classnames from "classnames";
+import { ChildrenProps } from "../HeadlessCarousel/types";
 
 interface RailCarouselSettings extends CarouselProps {
   boundaryThreshold: number | string;
   transitionThreshold: number | string;
 }
 
-export function FadeCarousel(props: CarouselProps) {
+export type HeadlessRailCarouselChildrenProps = RailCarouselSettings &
+  ChildrenProps & { itemWidth: number };
+
+export type HeadlessRailCarouselProps = CarouselProps & {
+  children: (args: HeadlessRailCarouselChildrenProps) => React.ReactNode;
+  preItems?: (args: HeadlessRailCarouselChildrenProps) => React.ReactNode;
+  postItems?: (args: HeadlessRailCarouselChildrenProps) => React.ReactNode;
+};
+
+export function HeadlessRailCarousel(props: HeadlessRailCarouselProps) {
   const settings: RailCarouselSettings = {
     ...defaultConfig,
     boundaryThreshold: 50,
@@ -22,30 +30,22 @@ export function FadeCarousel(props: CarouselProps) {
     ...props,
   };
   const {
-    items,
+    totalItems,
     slidesToShow,
-    responsive,
     transitionDelay,
+    responsive,
     swipe,
     boundaryThreshold: propsBoundaryThreshold,
     transitionThreshold: propsTransitionThreshold,
   } = settings;
-  const {
-    state,
-    data,
-    next,
-    prev,
-    goTo,
-    play,
-    pause,
-    grab,
-    release,
-    turnOn,
-    turnOff,
-  } = useCarousel(settings);
+
+  const carousel = useCarousel(settings);
+  const { state, data, next, prev, grab, release } = carousel;
+
   // Calculate each item's width based on slidesToShow
   const [itemWidth, setItemWidth] = useState(1);
   const listRef = useRef<HTMLDivElement>(null!);
+  const trackRef = useRef<HTMLDivElement>(null!);
   const [boundaryThreshold, setBoundaryThreshold] = useState(50);
   const [transitionThreshold, setTransitionThreshold] = useState(50);
   const [move, setMove] = useState(0);
@@ -118,7 +118,6 @@ export function FadeCarousel(props: CarouselProps) {
       // TODO: this needs to be represented in Machine layer
       data.dir === "ltr" && prev();
       data.dir === "rtl" && next();
-      // prev();
       resetTouch();
       return;
     }
@@ -157,19 +156,16 @@ export function FadeCarousel(props: CarouselProps) {
       if (move < 0) {
         data.dir === "ltr" && next();
         data.dir === "rtl" && prev();
-        // next();
       } else {
         // grab to right
         data.dir === "ltr" && prev();
         data.dir === "rtl" && next();
-        // prev();
       }
       resetTouch();
     }
 
     setMove(0);
     setStart(diff);
-    // setGrabbing(false);
   }
 
   // Sync boundaryThreshold and transitionThreshold with itemWidth
@@ -196,6 +192,8 @@ export function FadeCarousel(props: CarouselProps) {
     };
   }, []);
 
+  const totalWidth = totalItems * itemWidth;
+
   const swipeEventListeners = {
     onMouseDown: onTouchStart,
     onTouchStart: onTouchStart,
@@ -205,90 +203,53 @@ export function FadeCarousel(props: CarouselProps) {
     onTouchMove: onTouchMove,
   };
 
+  const rendererArguments: HeadlessRailCarouselChildrenProps = {
+    ...settings,
+    ...carousel,
+    itemWidth,
+  };
+
+  // TODO: explore the possibility of exposing HeadlessRailCarousel.Track component instead
   return (
     <div
-      className="carousel fade-carousel"
+      className="carousel rail-carousel"
       style={
         {
           "--transition-delay": `${transitionDelay}ms`,
         } as React.CSSProperties
       }
     >
-      <pre>{JSON.stringify(state.value)}</pre>
-      <pre>cursor: {data.cursor}</pre>
+      {/* Render preItems */}
+      {typeof props.preItems === "function" &&
+        props.preItems({
+          ...settings,
+          ...carousel,
+          itemWidth,
+        })}
+      {/* Render list of items in carousel */}
       <div className="items-list" ref={listRef}>
-        {data.groups.map((group, groupIdx) => (
-          <div
-            className={classnames("items-group", {
-              "items-group-active": data.cursor - 1 === groupIdx,
-            })}
-            key={groupIdx}
-            {...(swipe && swipeEventListeners)}
-          >
-            {group.map((item, itemIdx) => {
-              const elem = items[item - 1];
-              return (
-                <div
-                  className={classnames("item", {
-                    grabbable: swipe,
-                    grabbing: state.matches("grabbed"),
-                  })}
-                  key={itemIdx}
-                >
-                  <CarouselItem item={elem} />
-                </div>
-              );
-            })}
-          </div>
-        ))}
+        <div
+          ref={trackRef}
+          className={classnames("items-track", {
+            animated: !state.matches("grabbed"),
+          })}
+          style={{
+            width: totalWidth,
+            transform: `translate3d(${(data.cursor - 1) * -1 * itemWidth +
+              move}px, 0, 0)`,
+          }}
+          {...(swipe && swipeEventListeners)}
+        >
+          {props.children(rendererArguments)}
+        </div>
       </div>
-      <button
-        onClick={() => {
-          next();
-        }}
-      >
-        Next
-      </button>
-      <button
-        onClick={() => {
-          prev();
-        }}
-      >
-        Prev
-      </button>
-      <button
-        onClick={() => {
-          pause();
-        }}
-      >
-        PAUSE
-      </button>
-      <button
-        onClick={() => {
-          play();
-        }}
-      >
-        PLAY
-      </button>
-      <button
-        onClick={() => {
-          turnOn();
-        }}
-      >
-        Turn ON
-      </button>
-      <button
-        onClick={() => {
-          turnOff();
-        }}
-      >
-        Turn Off
-      </button>
-      <Dots
-        dots={data.groups}
-        onDotClick={goTo}
-        activeIndex={data.cursor - 1}
-      />
+      {/* Render postItems */}
+      {typeof props.postItems === "function" &&
+        props.postItems({
+          ...settings,
+          ...carousel,
+          itemWidth,
+        })}
     </div>
   );
 }
