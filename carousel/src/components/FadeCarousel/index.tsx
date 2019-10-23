@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { CarouselProps } from "../../types";
 import "../globalStyle.css";
 import "./index.css";
-import { parsePercentage } from "../../utils";
+import { parsePercentage, handleThreshold } from "../../utils";
 import { defaultConfig } from "../../machines/config";
 import { CarouselItem } from "../CarouselItem";
 import { Dots } from "../Dot";
@@ -12,29 +12,6 @@ import classnames from "classnames";
 interface RailCarouselSettings extends CarouselProps {
   boundaryThreshold: number | string;
   transitionThreshold: number | string;
-}
-
-function handleThreshold(
-  input: number | string,
-  baseScale: number,
-  fallback: number,
-) {
-  switch (typeof input) {
-    case "string": {
-      try {
-        const percentage = parsePercentage(input);
-        return baseScale * percentage;
-      } catch (err) {
-        return fallback;
-      }
-    }
-    case "number": {
-      return input;
-    }
-    default:
-      console.log(`invalid threshold, using fallback: ${fallback}`);
-      return fallback;
-  }
 }
 
 export function FadeCarousel(props: CarouselProps) {

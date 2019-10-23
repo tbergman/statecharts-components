@@ -4,7 +4,7 @@ import { CarouselProps } from "../../types";
 import "../globalStyle.css";
 import "./index.css";
 import { defaultConfig } from "../../machines/config";
-import { parsePercentage } from "../../utils";
+import { handleThreshold } from "../../utils";
 import { CarouselItem } from "../CarouselItem";
 import { Dots } from "../Dot";
 import { useCarousel } from "../HeadlessCarousel/useCarousel";
@@ -12,29 +12,6 @@ import { useCarousel } from "../HeadlessCarousel/useCarousel";
 interface RailCarouselSettings extends CarouselProps {
   boundaryThreshold: number | string;
   transitionThreshold: number | string;
-}
-
-function handleThreshold(
-  input: number | string,
-  baseScale: number,
-  fallback: number,
-) {
-  switch (typeof input) {
-    case "string": {
-      try {
-        const percentage = parsePercentage(input);
-        return baseScale * percentage;
-      } catch (err) {
-        return fallback;
-      }
-    }
-    case "number": {
-      return input;
-    }
-    default:
-      console.log(`invalid threshold, using fallback: ${fallback}`);
-      return fallback;
-  }
 }
 
 export function RailCarousel(props: CarouselProps) {
