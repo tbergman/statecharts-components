@@ -2,6 +2,7 @@ import React from "react";
 import classnames from "classnames";
 import { CarouselProps } from "../../types";
 import "../globalStyle.css";
+import "./rail.css";
 import "./index.css";
 import { CarouselItem } from "../CarouselItem";
 import { Dots } from "../Dot";

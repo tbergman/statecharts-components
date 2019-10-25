@@ -136,6 +136,8 @@ export function HeadlessRailCarousel(props: HeadlessRailCarouselProps) {
       return;
     }
 
+    console.log({ move: diff - start.current });
+
     setMove(diff - start.current);
   }
 
@@ -150,6 +152,8 @@ export function HeadlessRailCarousel(props: HeadlessRailCarouselProps) {
     } else {
       diff = (e as MouseEvent).pageX;
     }
+
+    console.log({ transitionThreshold });
 
     if (Math.abs(move) >= transitionThreshold) {
       // grab to left

@@ -7,12 +7,18 @@ type ImageState =
   | { state: "Loaded"; img: HTMLImageElement }
   | { state: "Error"; error: any };
 
+function ratioToPercentage(ratio: number) {
+  return `${ratio * 100}%`;
+}
+
 export function LazyImage({
   src,
   background = false,
+  h2wRatio = 1,
 }: {
   src: string;
   background?: boolean;
+  h2wRatio?: number;
 }) {
   const [imageState, setImageState] = useState<ImageState>({ state: "Idle" });
   const divRef = useRef<HTMLDivElement>(undefined!);
@@ -42,7 +48,7 @@ export function LazyImage({
           style={{
             // width: imageState.img.width,
             // height: imageState.img.height,
-            paddingBottom: "100%",
+            paddingBottom: ratioToPercentage(h2wRatio),
             maxWidth: "100%",
             minWidth: "100%",
             backgroundImage: `url(${imageState.img.src})`,

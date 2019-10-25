@@ -1,0 +1,69 @@
+.instagram-carousel .counter {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  z-index: 2;
+  background-color: #333;
+  color: #eee;
+  margin: 0;
+  border-radius: 13px;
+  padding: 3px 0px;
+  width: 36px;
+  text-align: center;
+}
+
+.instagram-carousel .next,
+.instagram-carousel .prev {
+  position: absolute;
+  top: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-top: -15px;
+}
+
+.instagram-carousel .next button,
+.instagram-carousel .prev button {
+  background-color: transparent;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  z-index: 3;
+  margin: 0;
+}
+.instagram-carousel .prev {
+  left: 8px;
+}
+/* .instagram-carousel .prev button {
+  border-width: 0 0 3px 3px;
+  margin-left: 3px;
+} */
+.instagram-carousel .next {
+  right: 8px;
+}
+/* .instagram-carousel .next button {
+  border-width: 3px 3px 0 0;
+  margin-left: -3px;
+} */
+
+.instagram-carousel .chevron-right,
+.instagram-carousel .chevron-left {
+  width: 10px;
+  height: 10px;
+  border: solid #000;
+  transform: rotateZ(45deg);
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+}
+.instagram-carousel .chevron-right {
+  border-width: 3px 3px 0 0;
+  margin-left: -3px;
+}
+.instagram-carousel .chevron-left {
+  border-width: 0 0 3px 3px;
+  margin-left: 3px;
+}

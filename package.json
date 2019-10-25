@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "bundle": "rollup -c rollup.config.js -w"
+  },
+  "devDependencies": {
+    "rollup": "^1.17.0",
+    "rollup-plugin-typescript2": "^0.22.1",
+    "typescript": "^3.5.3"
+  }
+}

@@ -2,29 +2,6 @@
   position: relative;
 }
 
-.rail-carousel .next,
-.rail-carousel .prev {
-  position: absolute;
-  top: 50%;
-  background-color: transparent;
-  width: 20px;
-  height: 20px;
-  transform: rotate(45deg);
-  border: solid #000;
-  margin-top: -10px;
-  padding: 0;
-  cursor: pointer;
-  z-index: 10;
-}
-.rail-carousel .prev {
-  left: -20px;
-  border-width: 0 0 5px 5px;
-}
-.rail-carousel .next {
-  right: -20px;
-  border-width: 5px 5px 0 0;
-}
-
 .rail-carousel .items-list {
   overflow: hidden;
   margin: 0;
@@ -55,7 +32,6 @@
   width: 100%;
   display: flex;
   flex-direction: row;
-  border: 1px solid;
 }
 
 .rail-carousel .item {
@@ -76,8 +52,4 @@
 
 .item img {
   pointer-events: none;
-}
-
-.rail-carousel .dots {
-  text-align: center;
 }

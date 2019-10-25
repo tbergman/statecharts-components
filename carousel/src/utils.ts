@@ -1,4 +1,10 @@
-import { Group, CarouselType, HeadlessCarouselProps } from "./types";
+import {
+  Group,
+  CarouselType,
+  HeadlessCarouselProps,
+  TernaryCarouselStateSchema,
+} from "./types";
+import { StateTree } from "xstate/lib/StateTree";
 
 export function getRange(length: number) {
   return makeNumeralSequence(1, length);
@@ -174,5 +180,11 @@ export function handleThreshold(
     default:
       console.log(`invalid threshold, using fallback: ${fallback}`);
       return fallback;
+  }
+}
+
+export function getStateTreePaths(stateTree?: StateTree) {
+  if (stateTree !== undefined) {
+    return stateTree.paths;
   }
 }
